@@ -66,7 +66,7 @@ embedding:
 retrieval:
   top_k:            7               # heading-чанки крупнее — нужно меньше
   score_threshold:  0.20            # понижен для heading-to-query сравнения
-  hyde:             false           # HyDE: вместо запроса эмбеддится гипотетический ответ LLM
+  hyde:             true           # HyDE: вместо запроса эмбеддится гипотетический ответ LLM
 
 # ───────────────────────────────────────────────
 #  LLM
@@ -118,6 +118,6 @@ enrichment:
 #  Генерация с разбивкой по авторам — шаг 6
 # ───────────────────────────────────────────────
 generation_v2:
-  max_chunks_per_author: 5    # heading-чанки крупнее — больше не нужно
-  top_k_per_query:        2   # чанков на один sub-query
+  max_chunks_per_author: 10  # heading-чанки крупнее — больше не нужно
+  top_k_per_query:       5   # чанков на один sub-query
   answers_v2_file: output/Ответы_v2.docx
