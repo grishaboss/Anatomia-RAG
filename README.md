@@ -48,6 +48,11 @@ pip install -r requirements.txt
 
 ### 1. Установка зависимостей
 
+**CUDA (GTX 1660 / A100):** перед установкой requirements.txt установите PyTorch с нужной версией CUDA:
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+```
+
 ```bash
 # Создать виртуальное окружение (рекомендуется)
 python3 -m venv .venv
@@ -55,11 +60,6 @@ source .venv/bin/activate          # Linux / macOS
 # .venv\Scripts\activate           # Windows
 
 pip install -r requirements.txt
-```
-
-**CUDA (GTX 1660 / A100):** перед установкой requirements.txt установите PyTorch с нужной версией CUDA:
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
 ### 2. Скачать модели (один раз)
