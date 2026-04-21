@@ -27,17 +27,56 @@ def get_device(config: dict) -> str:
     return "cpu"
 
 
-def retrieve(query: str, collection, embed_model, config: dict) -> list[dict]:
-    """Найти top-k чанков по запросу, отфильтровав по score_threshold."""
+def _generate_hypothetical_answer(query: str, config: dict) -> str:
+    """HyDE: попросить LLM сгенерировать гипотетический ответ на запрос.
+
+    Возвращает текст гипотетического ответа (для последующего эмбеддинга).
+    При ошибке возвращает исходный запрос (безопасный fallback).
+    """
+    prompt = (
+        "Кратко ответь на вопрос по анатомии человека "
+        "(3–5 предложений, только конкретные факты без вступлений):\n"
+        f"{query}"
+    )
+    system = "Ты эксперт-анатом. Дай краткий фактический ответ на русском языке."
+    try:
+        return call_llm(prompt, system, config)
+    except Exception:
+        return query  # fallback: использовать исходный запрос
+
+
+def retrieve(
+    query: str,
+    collection,
+    embed_model,
+    config: dict,
+    author_filter: str | None = None,
+    hyde: bool = False,
+) -> list[dict]:
+    """Найти top-k чанков по запросу, отфильтровав по score_threshold.
+
+    Args:
+        author_filter: если задан, возвращать только чанки этого автора
+                       (значение поля ``author`` в метаданных чанка).
+        hyde: если True, перед эмбеддингом запрос заменяется гипотетическим
+              ответом LLM (Hypothetical Document Embeddings). Улучшает recall
+              для коротких/общих запросов. Требует рабочий LLM backend.
+    """
     top_k = config["retrieval"]["top_k"]
     threshold = config["retrieval"]["score_threshold"]
 
-    embedding = embed_model.encode([query], normalize_embeddings=True)[0].tolist()
-    results = collection.query(
+    embedding_text = _generate_hypothetical_answer(query, config) if hyde else query
+    embedding = embed_model.encode([embedding_text], normalize_embeddings=True)[0].tolist()
+
+    query_kwargs: dict = dict(
         query_embeddings=[embedding],
         n_results=top_k,
         include=["documents", "metadatas", "distances"],
     )
+    if author_filter is not None:
+        query_kwargs["where"] = {"author": author_filter}
+
+    results = collection.query(**query_kwargs)
 
     chunks = []
     for doc, meta, dist in zip(

@@ -5,6 +5,7 @@
 
 # ---------- Document processing & OCR ----------
 docling[ocr]>=2.5.0          # парсинг PDF/DOCX/PPTX + layout + OCR (EasyOCR внутри)
+easyocr>=1.7.1                # явная зависимость (docling[ocr] не всегда тянет автоматически)
 python-docx>=1.1.2            # чтение/запись .docx (вопросы + выходной файл)
 PyMuPDF>=1.24.0               # рендер PDF-страниц для прямого OCR / тестов
 

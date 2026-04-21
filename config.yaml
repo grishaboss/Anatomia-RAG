@@ -22,20 +22,35 @@ ingestion:
 
   # Файлы без текстового слоя — форсируем OCR каждой страницы
   force_ocr_for_files:
-    - books/sapin-vol-1.pdf
-    - books/sapin-vol-2.pdf
+    - books/Сапин/sapin-tom-1.pdf
+    - books/Сапин/sapin-tom-2.pdf
 
   extract_figures: true
-  figures_scale:   2.0              # 1.0 = 72 dpi → 2.0 = 144 dpi
+  figures_scale:   1.5              # 1.0=72dpi 1.5=108dpi 2.0=144dpi; выше = больше VRAM
   min_figure_px:   80               # игнорировать картинки меньше N пикселей
+
+  # ── Производительность GPU ──────────────────
+  # EasyOCR обрабатывает текстовые регионы батчами; больше → выше утилизация GPU
+  # GTX 1660 Super 6 GB: 8–16; A100: 32+; если OOM — уменьши
+  ocr_batch_size:  256
+  # CPU-потоки для препроцессинга страниц (рендеринг, нарезка регионов)
+  # Чтобы GPU не простаивал в ожидании CPU: 4 — хороший старт для 6-8 ядер
+  num_cpu_threads: 24
 
 # ───────────────────────────────────────────────
 #  Чанкинг
 # ───────────────────────────────────────────────
 chunking:
-  tokenizer:      BAAI/bge-m3       # должен совпадать с embedding model
-  max_tokens:     512
-  overlap_tokens: 64
+  strategy:          heading         # heading | fixed
+                                     # heading: 1 секция = 1 чанк, embed_text=заголовок
+                                     # fixed:   HybridChunker с макс токенами
+  # ― strategy: heading ―――――――――――――――――――――――――――――
+  min_section_chars: 100             # игнорировать слишком короткие секции
+  max_section_chars: 8000            # обрезать очень длинные секции
+  # ― strategy: fixed ――――――――――――――――――――――――――――――
+  tokenizer:         BAAI/bge-m3     # должен совпадать с embedding model
+  max_tokens:        512
+  overlap_tokens:    64
 
 # ───────────────────────────────────────────────
 #  Embedding
@@ -49,8 +64,9 @@ embedding:
 #  Поиск
 # ───────────────────────────────────────────────
 retrieval:
-  top_k:            6
-  score_threshold:  0.25            # минимальная косинусная близость
+  top_k:            7               # heading-чанки крупнее — нужно меньше
+  score_threshold:  0.20            # понижен для heading-to-query сравнения
+  hyde:             false           # HyDE: вместо запроса эмбеддится гипотетический ответ LLM
 
 # ───────────────────────────────────────────────
 #  LLM
@@ -62,10 +78,10 @@ llm:
   #   A100 40 GB           → llama3.1:70b (~40 GB VRAM)
   #   Google Colab T4      → llama3.1:8b  (~5 GB VRAM)
   #   OpenAI               → gpt-4o / gpt-4o-mini
-  model:       llama3.2:3b
+  model:       gemma3:4b   # qwen2.5:3b | llama3.2:latest
   api_base:    http://localhost:11434
   api_key:     ""                   # нужен только для openai backend
-  temperature: 0.1
+  temperature: 0.0
   max_tokens:  3000
 
 # ───────────────────────────────────────────────
@@ -74,3 +90,34 @@ llm:
 output:
   exam_questions_file: "questions/Вопросы к экзамену для БХ,  БФ, МК-2025-26 год.docx"
   answers_file:        "output/Ответы_на_экзаменационные_вопросы.docx"
+
+# ───────────────────────────────────────────────
+#  Авторы источников (books/ → подпапки)
+# ───────────────────────────────────────────────
+authors:
+  - name: Гайворонский
+    primary: true
+  - name: Сапин
+    primary: true
+  - name: Якимов
+    primary: false      # дополнительный источник
+
+# ───────────────────────────────────────────────
+#  Обогащение вопросов — шаг 5
+# ───────────────────────────────────────────────
+enrichment:
+  threshold:   0.50      # минимальное косинусное сходство подвопроса с экзамвопросом
+  top_k:       15        # максимум подвопросов на один экзамвопрос
+  output_file: data/enriched_questions.json
+  # LLM-based enrichment (рекомендуется): результат подачи prompt_for_llm_matching.md
+  # в большую языковую модель (ChatGPT-5o, Claude и т.д.).
+  # Если файл существует — используется вместо output_file.
+  llm_file:    data/enriched_questions_from_chatgpt-5o.json
+
+# ───────────────────────────────────────────────
+#  Генерация с разбивкой по авторам — шаг 6
+# ───────────────────────────────────────────────
+generation_v2:
+  max_chunks_per_author: 5    # heading-чанки крупнее — больше не нужно
+  top_k_per_query:        2   # чанков на один sub-query
+  answers_v2_file: output/Ответы_v2.docx

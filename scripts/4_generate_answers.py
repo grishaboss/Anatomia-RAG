@@ -60,47 +60,75 @@ SYSTEM_PROMPT = """Ты эксперт-анатом, помогающий сту
 #  Парсинг вопросов из DOCX
 # ──────────────────────────────────────────────
 
-def parse_exam_questions(docx_path: Path) -> list[dict]:
-    """Разобрать нумерованные вопросы из DOCX-файла."""
-    doc = DocxDocument(str(docx_path))
-    questions: list[dict] = []
+def _md_path_for_docx(docx_path, config):
+    processed_dir = ROOT / config["paths"]["processed_dir"]
+    md = processed_dir / (docx_path.stem + ".md")
+    return md if md.exists() else None
+
+
+def _parse_questions_from_md(md_path):
+    """Parse questions from Docling-produced markdown."""
+    questions = []
     current_section = "Общие вопросы"
-
-    for para in doc.paragraphs:
-        text = para.text.strip()
-        if not text:
+    global_num = 0
+    for raw_line in md_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
             continue
-
-        style = para.style.name.lower()
-        is_heading_style = "heading" in style or "заголов" in style
-        is_bold = bool(para.runs) and all(r.bold for r in para.runs if r.text.strip())
-        is_numbered = bool(re.match(r"^\d+[\.\)]\s", text))
-
-        # Заголовок раздела
-        if (is_heading_style or is_bold) and not is_numbered:
-            current_section = text
+        # Раздел: **Текст** или ## Заголовок
+        section_m = re.match(r"^(?:\*\*|#+)\s*(.+?)\s*(?:\*\*)?$", line)
+        if section_m and not re.match(r"^\d+\.", line):
+            candidate = section_m.group(1).strip()
+            # пропускаем шапку документа (содержит год 20XX)
+            if len(candidate) >= 10 and not re.search(r"\d{4}", candidate):
+                current_section = candidate
             continue
-
-        # Нумерованный вопрос: "1. ...", "1) ..."
-        m = re.match(r"^(\d+)[\.\)]\s+(.+)", text)
-        if m:
-            questions.append(
-                {
-                    "number":  int(m.group(1)),
-                    "text":    m.group(2).strip(),
-                    "section": current_section,
-                }
-            )
-        elif questions and not is_heading_style:
-            # Продолжение предыдущего вопроса на следующей строке
-            questions[-1]["text"] += " " + text
-
+        # Вопрос: "1. Текст"
+        q_m = re.match(r"^(\d+)\.\s+(.+)", line)
+        if q_m:
+            global_num += 1
+            questions.append({
+                "number": global_num,
+                "text": q_m.group(2).strip(),
+                "section": current_section,
+            })
     return questions
 
 
-# ──────────────────────────────────────────────
-#  Чекпойнт для --resume
-# ──────────────────────────────────────────────
+def _parse_questions_from_docx(docx_path):
+    """Fallback: parse questions directly from DOCX."""
+    from docx import Document as _DocxDoc
+    questions = []
+    current_section = "Общие вопросы"
+    auto_num = 0
+    for para in _DocxDoc(str(docx_path)).paragraphs:
+        text = para.text.strip()
+        if not text:
+            continue
+        style = para.style.name.lower()
+        is_heading = "heading" in style or "заголов" in style
+        is_bold = bool(para.runs) and all(r.bold for r in para.runs if r.text.strip())
+        if is_heading or is_bold:
+            current_section = text
+            continue
+        m = re.match(r"^(\d+)[\.)\]]\s+(.+)", text)
+        if m:
+            auto_num = max(auto_num, int(m.group(1)))
+            questions.append({"number": int(m.group(1)), "text": m.group(2).strip(), "section": current_section})
+        elif len(text) >= 15:
+            auto_num += 1
+            questions.append({"number": auto_num, "text": text, "section": current_section})
+    return questions
+
+
+def parse_exam_questions(docx_path, config=None):
+    """Читает вопросы из .md (data/processed/), fallback — из DOCX."""
+    md_path = _md_path_for_docx(docx_path, config) if config else None
+    if md_path:
+        return _parse_questions_from_md(md_path)
+    logger.warning(f"MD не найден, читаю DOCX: {docx_path.name}")
+    return _parse_questions_from_docx(docx_path)
+
 
 def ckpt_path(output_path: Path) -> Path:
     return output_path.with_suffix(".checkpoint.json")
@@ -217,7 +245,7 @@ def main() -> None:
         sys.exit(1)
 
     # Парсинг вопросов
-    questions = parse_exam_questions(exam_file)
+    questions = parse_exam_questions(exam_file, config)
     logger.info(f"Загружено {len(questions)} экзаменационных вопросов")
     if not questions:
         logger.error("Вопросы не распознаны")

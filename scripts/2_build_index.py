@@ -99,7 +99,9 @@ def main() -> None:
     logger.info(f"Генерирую embeddings для {len(new_chunks)} новых чанков...")
 
     batch_size = embed_cfg["batch_size"]
-    texts = [c["text"] for c in new_chunks]
+    # Для heading-стратегии embed_text содержит только заголовок (короткий, точный поиск);
+    # для fixed-стратегии embed_text отсутствует → используем полный текст.
+    texts = [c.get("embed_text") or c["text"] for c in new_chunks]
     all_embeddings: list[list[float]] = []
 
     for i in tqdm(range(0, len(texts), batch_size), desc="Embedding"):
@@ -122,6 +124,8 @@ def main() -> None:
                     "source_name": c["source_name"],
                     "headings":    " > ".join(c.get("headings") or []),
                     "page":        c.get("page") or 0,
+                    "author":      c.get("author") or "",
+                    "figures":     json.dumps(c.get("figures") or [], ensure_ascii=False),
                 }
                 for c in batch
             ],
