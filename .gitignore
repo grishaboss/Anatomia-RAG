@@ -208,6 +208,10 @@ __marimo__/
 
 ###
 chroma_db/
-data/
+data/chunks/*
+data/figures/*
+data/processed/*
+data/enriched*
+data/manifest.json
 output/
 books/*/*
