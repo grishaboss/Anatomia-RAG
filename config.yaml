@@ -1,0 +1,76 @@
+# ═══════════════════════════════════════════════════════
+#  Anatomia-RAG – конфигурация
+#  Все пути указаны относительно корня проекта
+# ═══════════════════════════════════════════════════════
+
+paths:
+  books_dir:     books
+  questions_dir: questions
+  processed_dir: data/processed      # markdown + json от Docling
+  figures_dir:   data/figures        # извлечённые рисунки
+  chunks_dir:    data/chunks         # .jsonl с чанками
+  chroma_dir:    chroma_db           # векторная БД
+  output_dir:    output
+
+# ───────────────────────────────────────────────
+#  Ингестия (Docling)
+# ───────────────────────────────────────────────
+ingestion:
+  ocr_enabled:   true
+  ocr_backend:   easyocr            # easyocr | tesseract
+  ocr_languages: [ru, en]           # easyocr: 'ru','en' | tesseract: 'rus','eng'
+
+  # Файлы без текстового слоя — форсируем OCR каждой страницы
+  force_ocr_for_files:
+    - books/sapin-vol-1.pdf
+    - books/sapin-vol-2.pdf
+
+  extract_figures: true
+  figures_scale:   2.0              # 1.0 = 72 dpi → 2.0 = 144 dpi
+  min_figure_px:   80               # игнорировать картинки меньше N пикселей
+
+# ───────────────────────────────────────────────
+#  Чанкинг
+# ───────────────────────────────────────────────
+chunking:
+  tokenizer:      BAAI/bge-m3       # должен совпадать с embedding model
+  max_tokens:     512
+  overlap_tokens: 64
+
+# ───────────────────────────────────────────────
+#  Embedding
+# ───────────────────────────────────────────────
+embedding:
+  model:      BAAI/bge-m3           # хорошо работает с русским, ~2.2 GB
+  device:     auto                  # auto | cpu | cuda | mps
+  batch_size: 32
+
+# ───────────────────────────────────────────────
+#  Поиск
+# ───────────────────────────────────────────────
+retrieval:
+  top_k:            6
+  score_threshold:  0.25            # минимальная косинусная близость
+
+# ───────────────────────────────────────────────
+#  LLM
+# ───────────────────────────────────────────────
+llm:
+  backend:     ollama               # ollama | openai
+  # Варианты по железу:
+  #   GTX 1660 Super 6 GB  → llama3.2:3b  (~2.0 GB VRAM)
+  #   A100 40 GB           → llama3.1:70b (~40 GB VRAM)
+  #   Google Colab T4      → llama3.1:8b  (~5 GB VRAM)
+  #   OpenAI               → gpt-4o / gpt-4o-mini
+  model:       llama3.2:3b
+  api_base:    http://localhost:11434
+  api_key:     ""                   # нужен только для openai backend
+  temperature: 0.1
+  max_tokens:  3000
+
+# ───────────────────────────────────────────────
+#  Выходные файлы (шаг 4)
+# ───────────────────────────────────────────────
+output:
+  exam_questions_file: "questions/Вопросы к экзамену для БХ,  БФ, МК-2025-26 год.docx"
+  answers_file:        "output/Ответы_на_экзаменационные_вопросы.docx"

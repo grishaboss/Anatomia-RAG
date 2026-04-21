@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────
+#  Anatomia-RAG – зависимости
+#  Python >= 3.10
+# ─────────────────────────────────────────────
+
+# ---------- Document processing & OCR ----------
+docling[ocr]>=2.5.0          # парсинг PDF/DOCX/PPTX + layout + OCR (EasyOCR внутри)
+python-docx>=1.1.2            # чтение/запись .docx (вопросы + выходной файл)
+PyMuPDF>=1.24.0               # рендер PDF-страниц для прямого OCR / тестов
+
+# ---------- Vector store ----------
+chromadb>=0.5.0
+
+# ---------- Embeddings ----------
+sentence-transformers>=3.0.0
+# torch устанавливается автоматически как зависимость,
+# но для CUDA лучше установить вручную перед этим файлом:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+transformers>=4.40.0          # для токенизатора чанкера
+
+# ---------- LLM backends ----------
+ollama>=0.3.0                 # локальный inference (llama3, mistral, …)
+openai>=1.30.0                # OpenAI API или любой OpenAI-совместимый сервер
+
+# ---------- Utils ----------
+PyYAML>=6.0.0
+tqdm>=4.66.0
+Pillow>=10.0.0
