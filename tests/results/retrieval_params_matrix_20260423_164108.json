@@ -1,0 +1,117 @@
+{
+  "query": "строение позвонка тело дуга отростки",
+  "matrix": [
+    {
+      "top_k": 3,
+      "threshold": 0.15,
+      "n_chunks": 3,
+      "avg_score": 0.5903272032737732,
+      "elapsed": 1.0153648460000113
+    },
+    {
+      "top_k": 3,
+      "threshold": 0.2,
+      "n_chunks": 3,
+      "avg_score": 0.5903272032737732,
+      "elapsed": 0.04849111300063669
+    },
+    {
+      "top_k": 3,
+      "threshold": 0.25,
+      "n_chunks": 3,
+      "avg_score": 0.5903272032737732,
+      "elapsed": 0.04763034700044955
+    },
+    {
+      "top_k": 3,
+      "threshold": 0.3,
+      "n_chunks": 3,
+      "avg_score": 0.5903272032737732,
+      "elapsed": 0.04740794800090953
+    },
+    {
+      "top_k": 5,
+      "threshold": 0.15,
+      "n_chunks": 5,
+      "avg_score": 0.5741084694862366,
+      "elapsed": 0.05237897699953464
+    },
+    {
+      "top_k": 5,
+      "threshold": 0.2,
+      "n_chunks": 5,
+      "avg_score": 0.5741084694862366,
+      "elapsed": 0.04971008400025312
+    },
+    {
+      "top_k": 5,
+      "threshold": 0.25,
+      "n_chunks": 5,
+      "avg_score": 0.5741084694862366,
+      "elapsed": 0.04827768999894033
+    },
+    {
+      "top_k": 5,
+      "threshold": 0.3,
+      "n_chunks": 5,
+      "avg_score": 0.5741084694862366,
+      "elapsed": 0.04817008200006967
+    },
+    {
+      "top_k": 7,
+      "threshold": 0.15,
+      "n_chunks": 7,
+      "avg_score": 0.564606751714434,
+      "elapsed": 0.05219850200046494
+    },
+    {
+      "top_k": 7,
+      "threshold": 0.2,
+      "n_chunks": 7,
+      "avg_score": 0.564606751714434,
+      "elapsed": 0.05019353200077603
+    },
+    {
+      "top_k": 7,
+      "threshold": 0.25,
+      "n_chunks": 7,
+      "avg_score": 0.564606751714434,
+      "elapsed": 0.04898607299946889
+    },
+    {
+      "top_k": 7,
+      "threshold": 0.3,
+      "n_chunks": 7,
+      "avg_score": 0.564606751714434,
+      "elapsed": 0.04877243800001452
+    },
+    {
+      "top_k": 10,
+      "threshold": 0.15,
+      "n_chunks": 10,
+      "avg_score": 0.5549101769924164,
+      "elapsed": 0.05259081599979254
+    },
+    {
+      "top_k": 10,
+      "threshold": 0.2,
+      "n_chunks": 10,
+      "avg_score": 0.5549101769924164,
+      "elapsed": 0.04948409400094533
+    },
+    {
+      "top_k": 10,
+      "threshold": 0.25,
+      "n_chunks": 10,
+      "avg_score": 0.5549101769924164,
+      "elapsed": 0.05081162399983441
+    },
+    {
+      "top_k": 10,
+      "threshold": 0.3,
+      "n_chunks": 10,
+      "avg_score": 0.5549101769924164,
+      "elapsed": 0.04896558499967796
+    }
+  ]
+}

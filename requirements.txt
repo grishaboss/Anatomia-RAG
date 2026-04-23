@@ -28,3 +28,10 @@ openai>=1.30.0                # OpenAI API или любой OpenAI-совмес
 PyYAML>=6.0.0
 tqdm>=4.66.0
 Pillow>=10.0.0
+
+# ---------- Test suite ----------
+rich>=13.0.0                  # красивый консольный вывод (таблицы, панели)
+ragas>=0.2.0                  # RAG evaluation framework (ContextPrecision, Recall, Faithfulness)
+langchain-ollama>=0.2.0       # LangChain обёртка для Ollama (нужна ragas)
+langchain-huggingface>=0.1.0  # LangChain обёртка для HuggingFace embeddings (нужна ragas)
+langchain-core>=0.3.0         # базовый LangChain (транзитивная зависимость ragas)

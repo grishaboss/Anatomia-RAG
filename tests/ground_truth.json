@@ -1,0 +1,61 @@
+{
+  "_comment": "Эталонные ответы для RAGAS-оценки. Заполни поле 'reference' для каждого подвопроса.",
+  "_instructions": "Запусти: python tests/test_05_ragas.py. Без reference работают только Faithfulness и ResponseRelevancy.",
+  "questions": [
+    {
+      "id": "I.3.1",
+      "question": "Какие части выделяют у типичного позвонка?",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.2",
+      "question": "В чём особенности шейных позвонков по сравнению с позвонками других отделов?",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.3",
+      "question": "Расскажите о строении I шейного позвонка (атланта).",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.4",
+      "question": "Расскажите о строении II шейного позвонка (осевого, axis).",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.5",
+      "question": "В чём особенности грудных позвонков?",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.6",
+      "question": "В чём особенности поясничных позвонков?",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.7",
+      "question": "Расскажите о строении крестца (os sacrum).",
+      "reference": "",
+      "author_filter": null
+    },
+    {
+      "id": "I.3.8",
+      "question": "Позвоночный столб в целом: строение, соединения позвонков, движения.",
+      "reference": "",
+      "author_filter": null
+    }
+  ]
+},
+# пример
+{
+  "id": "I.3.1",
+  "question": "Какие части выделяют у типичного позвонка?",
+  "reference": "У типичного позвонка выделяют тело (corpus vertebrae), дугу (arcus vertebrae) и отростки. Дуга вместе с телом образует позвоночное отверстие (foramen vertebrale). От дуги отходят 7 отростков: 1 остистый (processus spinosus), 2 поперечных (processus transversus) и 4 суставных (processus articulares — 2 верхних и 2 нижних).",
+  "author_filter": null
+}
