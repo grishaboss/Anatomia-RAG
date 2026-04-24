@@ -6,308 +6,469 @@
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.833018+00:00"
+      "ts": "2026-04-24T14:56:20.730574+00:00"
     },
     "02e5d244a5cf": {
       "collection": "anatomy__bge-m3__head__c150_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.015026+00:00"
+      "ts": "2026-04-24T14:56:19.914274+00:00"
+    },
+    "08d6138ab18f": {
+      "collection": "anatomy__bge-m3__head__c150_m3_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.046081+00:00"
+    },
+    "0b974f027620": {
+      "collection": "anatomy__bge-m3__head__c300_m3_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.609617+00:00"
+    },
+    "0d45248a0dd8": {
+      "collection": "anatomy__bge-m3__head__c500_m3_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.143950+00:00"
     },
     "114dde46b894": {
       "collection": "anatomy__bge-m3__head__c300_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.033328+00:00"
+      "ts": "2026-04-24T14:56:23.883772+00:00"
     },
     "17b76ad06f4f": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.510270+00:00"
+      "ts": "2026-04-24T14:56:22.396929+00:00"
     },
     "1a7b8701827e": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.420496+00:00"
+      "ts": "2026-04-24T14:56:25.228226+00:00"
     },
     "1ea2fc5bc820": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.816075+00:00"
+      "ts": "2026-04-24T14:56:21.693111+00:00"
     },
     "220271ddafad": {
       "collection": "anatomy__bge-m3__head__c500_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.688214+00:00"
+      "ts": "2026-04-24T14:56:20.593018+00:00"
     },
     "23a1f9050fa2": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.117007+00:00"
+      "ts": "2026-04-24T14:56:21.001465+00:00"
+    },
+    "24288cf279c1": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.329921+00:00"
     },
     "242c8e891ac2": {
       "collection": "anatomy__bge-m3__head__c150_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:28.736972+00:00"
+      "ts": "2026-04-24T14:56:19.648729+00:00"
     },
     "2e8b27aa84ac": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.259244+00:00"
+      "ts": "2026-04-24T14:56:21.134980+00:00"
     },
     "2ff449891668": {
       "collection": "anatomy__bge-m3__head__c300_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.277312+00:00"
+      "ts": "2026-04-24T14:56:20.186395+00:00"
     },
     "3bb86b936f48": {
       "collection": "anatomy__bge-m3__head__c300_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.144682+00:00"
+      "ts": "2026-04-24T14:56:20.051021+00:00"
+    },
+    "3d09fe5d721d": {
+      "collection": "anatomy__bge-m3__head__c150_m3_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.185599+00:00"
     },
     "4177e8f7d96d": {
       "collection": "anatomy__bge-m3__head__c500_m2_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.588028+00:00"
+      "ts": "2026-04-24T14:56:24.419593+00:00"
     },
     "46bd9651f776": {
       "collection": "anatomy__bge-m3__head__c150_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.618125+00:00"
+      "ts": "2026-04-24T14:56:23.484939+00:00"
     },
     "4bccbe63e246": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c500_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.701120+00:00"
+      "ts": "2026-04-24T14:56:25.495543+00:00"
     },
     "4c8d2fd974a1": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.009844+00:00"
+      "ts": "2026-04-24T14:56:24.827894+00:00"
     },
     "4ddf35cbbacf": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.147715+00:00"
+      "ts": "2026-04-24T14:56:24.961840+00:00"
     },
     "5386d6e1f406": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.977672+00:00"
+      "ts": "2026-04-24T14:56:20.866005+00:00"
     },
     "543b5e2624f0": {
       "collection": "anatomy__bge-m3__head__c150_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:28.878295+00:00"
+      "ts": "2026-04-24T14:56:19.783087+00:00"
     },
     "5575b7546e54": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.952292+00:00"
+      "ts": "2026-04-24T14:56:21.833346+00:00"
+    },
+    "59d28acf53df": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.622819+00:00"
     },
     "60134e181b89": {
       "collection": "anatomy__bge-m3__head__c500_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.314847+00:00"
+      "ts": "2026-04-24T14:56:24.150942+00:00"
+    },
+    "63d85246b787": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:25.778987+00:00"
+    },
+    "6b4a282a86ec": {
+      "collection": "anatomy__bge-m3__head__c150_m3_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.327826+00:00"
     },
     "6c5333863cbc": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.060510+00:00"
+      "ts": "2026-04-24T14:56:22.938765+00:00"
     },
     "6f8777f4faf4": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.283605+00:00"
+      "ts": "2026-04-24T14:56:25.096026+00:00"
     },
     "7b3a1f57e63d": {
       "collection": "anatomy__bge-m3__head__c300_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.415206+00:00"
+      "ts": "2026-04-24T14:56:20.323739+00:00"
     },
     "829fa6bb5ff1": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.545717+00:00"
+      "ts": "2026-04-24T14:56:21.410054+00:00"
     },
     "8325799316cb": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.369479+00:00"
+      "ts": "2026-04-24T14:56:22.259335+00:00"
+    },
+    "938e0a195b6c": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:25.917349+00:00"
+    },
+    "9604e4673ec7": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.908254+00:00"
     },
     "973f28c9f435": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.727016+00:00"
+      "ts": "2026-04-24T14:56:24.558098+00:00"
+    },
+    "9a888f12549e": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m3_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.674189+00:00"
+    },
+    "a0aa469320a8": {
+      "collection": "anatomy__bge-m3__head__c300_m3_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.470771+00:00"
+    },
+    "a372b425933c": {
+      "collection": "anatomy__bge-m3__head__c500_m3_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.878287+00:00"
+    },
+    "a42f2a98cac5": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.474959+00:00"
     },
     "a48aed330e1f": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.682648+00:00"
+      "ts": "2026-04-24T14:56:21.553735+00:00"
     },
     "a640385f2f9a": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.926513+00:00"
+      "ts": "2026-04-24T14:56:22.799803+00:00"
     },
     "aa370cf3f07a": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:30.402234+00:00"
+      "ts": "2026-04-24T14:56:21.271416+00:00"
+    },
+    "ad734d17b3b0": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m3_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.276332+00:00"
+    },
+    "b0aa7c41cccf": {
+      "collection": "anatomy__bge-m3__head__c300_m3_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:27.741734+00:00"
     },
     "b20ac4de5aa8": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.869892+00:00"
+      "ts": "2026-04-24T14:56:24.693413+00:00"
     },
     "b42dd8a466ff": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.648462+00:00"
+      "ts": "2026-04-24T14:56:22.533145+00:00"
     },
     "b6318bda491a": {
       "collection": "anatomy__bge-m3__head__c150_m2_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.755239+00:00"
+      "ts": "2026-04-24T14:56:23.619029+00:00"
+    },
+    "c043589bea2c": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.189956+00:00"
     },
     "c26a052a5af4": {
       "collection": "anatomy__bge-m3__head__c300_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.894907+00:00"
+      "ts": "2026-04-24T14:56:23.754223+00:00"
     },
     "c3aabe4f973a": {
       "collection": "anatomy__bge-m3__head__c500_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:29.550713+00:00"
+      "ts": "2026-04-24T14:56:20.459038+00:00"
+    },
+    "cb62e17f7eed": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.053494+00:00"
     },
     "cce68c8e3d6d": {
       "collection": "anatomy__bge-m3__head__c150_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.483712+00:00"
+      "ts": "2026-04-24T14:56:23.350546+00:00"
     },
     "d5ca967e381c": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.088493+00:00"
+      "ts": "2026-04-24T14:56:21.980418+00:00"
     },
     "d6c65db1c974": {
       "collection": "anatomy__e5-mistral-7b-instru__head__c500_m2_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:34.565707+00:00"
+      "ts": "2026-04-24T14:56:25.360578+00:00"
     },
     "db518243c4f8": {
       "collection": "anatomy__bge-m3__head__c500_m2_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.449054+00:00"
+      "ts": "2026-04-24T14:56:24.283629+00:00"
     },
     "df2781932145": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.203536+00:00"
+      "ts": "2026-04-24T14:56:23.069026+00:00"
+    },
+    "e585b3ab7ff3": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m3_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.539602+00:00"
     },
     "e762e8b6cbbe": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s0",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.227616+00:00"
+      "ts": "2026-04-24T14:56:22.121640+00:00"
     },
     "e8d3cff2847b": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:31.789147+00:00"
+      "ts": "2026-04-24T14:56:22.668563+00:00"
     },
     "ea72c978c543": {
       "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:32.346056+00:00"
+      "ts": "2026-04-24T14:56:23.210890+00:00"
+    },
+    "ebe1a7ed389e": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m3_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.407524+00:00"
+    },
+    "f14fa29f4408": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:25.638398+00:00"
+    },
+    "fa0c8fb8d8a9": {
+      "collection": "anatomy__bge-m3__head__c500_m3_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:28.010230+00:00"
     },
     "fcdaeb3317b2": {
       "collection": "anatomy__bge-m3__head__c300_m2_s1500",
       "dry_run": true,
       "exit_code": 0,
       "status": "done",
-      "ts": "2026-04-24T14:45:33.172564+00:00"
+      "ts": "2026-04-24T14:56:24.014386+00:00"
+    },
+    "fe0e1055ad3a": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:56:26.767297+00:00"
     }
   },
   "version": 1

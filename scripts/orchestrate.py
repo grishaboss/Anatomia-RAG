@@ -95,6 +95,15 @@ RESOURCE_PROFILES: dict[str, dict[str, Any]] = {
         "time_min": 480,
         "exclusive": True,
     },
+    # Кластер hiperf, узел tesla-a101
+    "hiperf": {
+        "gpu_num": 1,
+        "cpus": 16,
+        "mem_gb": 80,
+        "time_min": 480,
+        "partition": "hiperf",
+        "nodelist": "tesla-a101",
+    },
 }
 
 _SRUN_PARSABLE_SUPPORTED: bool | None = None
@@ -481,13 +490,13 @@ def main() -> None:  # noqa: C901 — намеренно монолитная, �
                         help="Пропустить генерацию ответов")
 
     # SLURM / ресурсы
-    parser.add_argument("--profile", default="gpu1", choices=list(RESOURCE_PROFILES),
+    parser.add_argument("--profile", default="hiperf", choices=list(RESOURCE_PROFILES),
                         help=f"Ресурсный профиль SLURM: {list(RESOURCE_PROFILES)}")
-    parser.add_argument("--index-profile", default="gpu1", choices=list(RESOURCE_PROFILES),
+    parser.add_argument("--index-profile", default="hiperf", choices=list(RESOURCE_PROFILES),
                         help="Ресурсный профиль для 2_build_index.py")
-    parser.add_argument("--partition", default=None,
+    parser.add_argument("--partition", default="hiperf",
                         help="SLURM partition (например: v100, a100)")
-    parser.add_argument("--nodelist", default="",
+    parser.add_argument("--nodelist", default="tesla-a101",
                         help="Запустить на конкретных узлах: node1,node2")
     parser.add_argument("--time", type=int, default=None, metavar="MIN",
                         help="Переопределить время (минут) для srun")
