@@ -1,0 +1,116 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Конфиг для scripts/eval_retrieval_grid.py
+#
+# Как использовать:
+#   python scripts/eval_retrieval_grid.py
+#   python scripts/eval_retrieval_grid.py --experiments heading_only text_only
+#   python scripts/eval_retrieval_grid.py --no-hyde          # пропустить HyDE
+#   python scripts/eval_retrieval_grid.py --top-k 10
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ── Тестовые запросы ──────────────────────────────────────────────────────────
+# Добавляй столько запросов, сколько нужно для оценки.
+# relevant_keywords — хотя бы одно слово должно встречаться в тексте чанка,
+# чтобы он считался "релевантным" в сводной таблице.
+queries:
+  - id: "I.3"
+    text: "Позвонки: общий план строения, особенности позвонков разных отделов позвоночного столба. Позвоночный столб в целом, его соединения, васкуляризация и иннервация."
+    relevant_keywords:
+      - позвонок
+      - позвонки
+      - позвоночн
+      - vertebra
+      - шейный позвонок
+      - грудной позвонок
+      - поясничный позвонок
+      - атлант
+      - крестец
+
+  # Раскомментируй и добавь свои запросы:
+  # - id: "I.1"
+  #   text: "Кости черепа: строение, соединения"
+  #   relevant_keywords:
+  #     - череп
+  #     - cranium
+  #     - лобная кость
+  #     - теменная кость
+
+
+# ── Параметры оценки ──────────────────────────────────────────────────────────
+eval:
+  top_k: 7                 # сколько чанков брать для каждого запроса
+  show_text_chars: 200     # сколько символов текста чанка выводить в детальном режиме
+
+
+# ── Эксперименты ──────────────────────────────────────────────────────────────
+# Поля:
+#   name                    — уникальный id (для флага --experiments)
+#   description             — человекочитаемое описание
+#   embed_strategy          — одно из:
+#     heading_only          текущий baseline: embed = только заголовок чанка
+#     text_only             embed = только полный текст чанка
+#     heading_plus_text     embed = заголовок + первые N символов текста
+#   heading_plus_text_chars — (только для heading_plus_text)
+#                             сколько символов текста добавлять; 0 = весь текст
+#   hyde                    — true: LLM генерирует гипотетический ответ перед поиском
+#                             ВНИМАНИЕ: +~30s на запрос, нужен Ollama
+
+experiments:
+
+  # ── Текущий baseline ────────────────────────────────────────────────────────
+  - name: "heading_only"
+    description: "Текущий индекс: embed = только заголовок раздела"
+    embed_strategy: heading_only
+    hyde: false
+
+  # ── Только текст ────────────────────────────────────────────────────────────
+  - name: "text_only"
+    description: "embed = только полный текст чанка (без заголовка)"
+    embed_strategy: text_only
+    hyde: false
+
+  # ── Заголовок + начало текста ───────────────────────────────────────────────
+  - name: "heading_plus_200"
+    description: "embed = заголовок + первые 200 символов текста"
+    embed_strategy: heading_plus_text
+    heading_plus_text_chars: 200
+    hyde: false
+
+  - name: "heading_plus_500"
+    description: "embed = заголовок + первые 500 символов текста"
+    embed_strategy: heading_plus_text
+    heading_plus_text_chars: 500
+    hyde: false
+
+  - name: "heading_plus_full"
+    description: "embed = заголовок + весь текст чанка"
+    embed_strategy: heading_plus_text
+    heading_plus_text_chars: 0    # 0 = без ограничений
+    hyde: false
+
+  # ── HyDE ────────────────────────────────────────────────────────────────────
+  # LLM (gemma3:4b) генерирует гипотетический ответ, потом ищем по нему.
+  # Медленнее: ~30s на каждый запрос.
+  - name: "heading_hyde"
+    description: "Заголовок + HyDE (LLM генерирует гипотетический ответ)"
+    embed_strategy: heading_only
+    hyde: true
+
+  - name: "text_hyde"
+    description: "Полный текст + HyDE"
+    embed_strategy: text_only
+    hyde: true
+
+  - name: "heading_plus_500_hyde"
+    description: "Заголовок + 500 символов + HyDE"
+    embed_strategy: heading_plus_text
+    heading_plus_text_chars: 500
+    hyde: true
+
+  # ── Место для твоих экспериментов ───────────────────────────────────────────
+  # - name: "my_experiment"
+  #   description: "Описание"
+  #   embed_strategy: heading_plus_text
+  #   heading_plus_text_chars: 1000
+  #   hyde: false

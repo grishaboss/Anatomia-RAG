@@ -1,0 +1,78 @@
+{
+  "timestamp": "20260424_172026",
+  "model": "gemma3:4b",
+  "retrieval": {
+    "top_k": 7,
+    "threshold": 0.2,
+    "hyde": true
+  },
+  "per_question": [
+    {
+      "id": "I.3",
+      "question": "Позвонки: общий план строения, особенности позвонков разных отделов позвоночного столба. Позвоночный столб в целом, его соединения, васкуляризация и иннервация.",
+      "n_contexts": 7,
+      "context_chars": 19888,
+      "answer_chars": 1979,
+      "llm_context_precision_with_reference": null,
+      "context_recall": null,
+      "faithfulness": null,
+      "answer_relevancy": 0.4892
+    }
+  ],
+  "aggregate": {
+    "llm_context_precision_with_reference": null,
+    "context_recall": null,
+    "faithfulness": null,
+    "answer_relevancy": 0.4892
+  },
+  "aspect_coverage": [
+    {
+      "id": "I.3.1",
+      "label": "Части типичного позвонка",
+      "max_cosine_sim": 0.6935,
+      "covered": true
+    },
+    {
+      "id": "I.3.2",
+      "label": "Особенности шейных позвонков",
+      "max_cosine_sim": 0.7365,
+      "covered": true
+    },
+    {
+      "id": "I.3.3",
+      "label": "Строение I шейного позвонка (атлант)",
+      "max_cosine_sim": 0.5754,
+      "covered": true
+    },
+    {
+      "id": "I.3.4",
+      "label": "Строение II шейного позвонка (axis)",
+      "max_cosine_sim": 0.655,
+      "covered": true
+    },
+    {
+      "id": "I.3.5",
+      "label": "Особенности грудных позвонков",
+      "max_cosine_sim": 0.8008,
+      "covered": true
+    },
+    {
+      "id": "I.3.6",
+      "label": "Особенности поясничных позвонков",
+      "max_cosine_sim": 0.7571,
+      "covered": true
+    },
+    {
+      "id": "I.3.7",
+      "label": "Строение крестца (os sacrum)",
+      "max_cosine_sim": 0.6581,
+      "covered": true
+    },
+    {
+      "id": "I.3.8",
+      "label": "Позвоночный столб: строение, васкуляризация, иннервация",
+      "max_cosine_sim": 0.6675,
+      "covered": true
+    }
+  ]
+}

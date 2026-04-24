@@ -24,6 +24,7 @@ ingestion:
   force_ocr_for_files:
     - books/Сапин/sapin-tom-1.pdf
     - books/Сапин/sapin-tom-2.pdf
+    - books/Гайворонский/gajvoronskij_i_v_normalnaya_anatomiya-tom-1.pdf
 
   extract_figures: true
   figures_scale:   1.5              # 1.0=72dpi 1.5=108dpi 2.0=144dpi; выше = больше VRAM

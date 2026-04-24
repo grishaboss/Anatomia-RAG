@@ -48,20 +48,46 @@ def load_ground_truth(ids: list[str] | None = None) -> list[dict]:
     return questions
 
 
-def retrieve_context(question_text: str, author_filter: str | None, cfg: dict) -> tuple[list[str], list[dict]]:
-    """Returns (context_strings, raw_chunks)."""
-    from utils import retrieve, format_context
+def retrieve_context(question: dict, cfg: dict) -> tuple[list[str], list[dict]]:
+    """Retrieval для RAGAS-оценки.
 
-    top_k = cfg["retrieval"]["top_k"]
-    threshold = cfg["retrieval"]["score_threshold"]
-    chunks = retrieve(
-        question_text,
-        get_collection(),
-        get_embed_model(),
-        cfg,
-        author_filter=author_filter,
-    )
-    return [c["text"] for c in chunks], chunks
+    Ищет по каждому автору отдельно (без HyDE — точнее для коротких запросов),
+    объединяет, дедуплицирует и возвращает top_k лучших чанков суммарно.
+    Кол-во чанков ограничено top_k из config (default 7), иначе RAGAS
+    делает по LLM-вызову на каждый чанк и выбивается из timeout.
+    """
+    from utils import retrieve
+
+    question_text = question["question"]
+    # Для RAGAS evaluation берём не более 3 чанков: каждый чанк = отдельный LLM-вызов
+    # (~70s × 7 чанков = 490s только для precision), что гарантированно выбивает timeout.
+    # 3 чанка × 70s ≈ 210s — укладывается в timeout.
+    top_k = min(cfg["retrieval"]["top_k"], 3)
+
+    # HyDE отключаем для evaluation: прямой запрос точнее для специфичных вопросов,
+    # и экономит ~30s на LLM-вызов гипотетического документа.
+    eval_cfg = {**cfg, "retrieval": {**cfg["retrieval"], "hyde": False}}
+
+    authors = [a["name"] for a in cfg.get("authors", [])] or [None]
+
+    all_chunks: list[dict] = []
+    seen: set[str] = set()
+    for author in authors:
+        chunks = retrieve(
+            question_text,
+            get_collection(),
+            get_embed_model(),
+            eval_cfg,
+            author_filter=author,
+        )
+        for c in chunks:
+            if c["text"] not in seen:
+                seen.add(c["text"])
+                all_chunks.append(c)
+
+    all_chunks.sort(key=lambda c: c["score"], reverse=True)
+    best = all_chunks[:top_k]
+    return [c["text"] for c in best], best
 
 
 def generate_answer(question_text: str, contexts: list[str], cfg: dict) -> str:
@@ -81,15 +107,21 @@ def generate_answer(question_text: str, contexts: list[str], cfg: dict) -> str:
     return call_llm(user_prompt, mod.SYSTEM_PROMPT_V2, cfg)
 
 
-def build_ragas_llm():
+def build_ragas_llm(judge_model: str | None = None):
     """Build LangChain-wrapped Ollama LLM for RAGAS."""
     from langchain_ollama import ChatOllama
     from ragas.llms import LangchainLLMWrapper
 
     cfg = get_config()
-    model = cfg["llm"]["model"]
+    # Judge LLM отдельно от answer LLM — должен продуцировать чёткий JSON.
+    # gemma3:4b хорошо генерирует ответы, но плохо следует JSON-формату RAGAS-промптов.
+    # llama3:8b, mistral:7b — значительно надёжнее выдают JSON.
+    model = judge_model or cfg["llm"].get("ragas_judge_model") or cfg["llm"]["model"]
     base_url = cfg["llm"].get("api_base", "http://localhost:11434")
     console.print(f"  [dim]RAGAS judge LLM: {model} @ {base_url}[/dim]")
+    # НЕ используем format="json" — Ollama JSON-режим ломает fix_output_format:
+    # модель начинает оборачивать произвольный текст в {} вместо нужной RAGAS-схемы.
+    # RAGAS сам справляется с парсингом при достаточном timeout.
     llm = ChatOllama(model=model, temperature=0, base_url=base_url)
     return LangchainLLMWrapper(llm)
 
@@ -122,6 +154,11 @@ def main() -> None:
                         help="Не генерировать ответы LLM (только контекстные метрики)")
     parser.add_argument("--save", action="store_true",
                         help="Сохранить отчёт в tests/results/ragas_TIMESTAMP.json")
+    parser.add_argument("--judge", metavar="MODEL", default=None,
+                        help="Ollama модель для RAGAS judge (default: значение llm.model из config.yaml)")
+    parser.add_argument("--only", metavar="METRIC",
+                        choices=["precision", "recall", "faithfulness", "relevancy"],
+                        help="Запустить только одну метрику (для быстрой проверки)")
     args = parser.parse_args()
 
     console.rule("[bold cyan]test_05_ragas.py — RAGAS evaluation[/bold cyan]")
@@ -141,7 +178,7 @@ def main() -> None:
 
     # ── Подготовка RAGAS ──────────────────────────────────────────────────
     with console.status("Инициализация RAGAS…"):
-        ragas_llm = build_ragas_llm()
+        ragas_llm = build_ragas_llm(args.judge)
         ragas_emb = build_ragas_embeddings()
 
     from ragas.dataset_schema import EvaluationDataset, SingleTurnSample
@@ -178,11 +215,28 @@ def main() -> None:
         sys.exit(1)
 
     metrics = metrics_with_ref if has_reference else metrics_no_ref
+
+    # --only: ограничить одной метрикой
+    if getattr(args, "only", None):
+        _map = {
+            "precision": "LLMContextPrecisionWithReference",
+            "recall": "LLMContextRecall",
+            "faithfulness": "Faithfulness",
+            "relevancy": "ResponseRelevancy",
+        }
+        target = _map[args.only]
+        metrics = [m for m in metrics if m.__class__.__name__ == target]
+        if not metrics:
+            console.print(f"[red]Метрика '{args.only}' недоступна с текущими настройками[/red]")
+            sys.exit(1)
+
     console.print(f"  Метрики: {[m.__class__.__name__ for m in metrics]}")
 
     # ── Сборка датасета ───────────────────────────────────────────────────
     samples: list[SingleTurnSample] = []
     raw_records = []
+    contexts_by_qid: dict[str, list[str]] = {}
+    answers_by_qid: dict[str, str] = {}
 
     for q in questions:
         qid = q["id"]
@@ -192,10 +246,10 @@ def main() -> None:
 
         console.rule(f"[dim]{qid}: {question_text[:70]}[/dim]", style="dim")
 
-        # Retrieval
+        # Retrieval — используем тот же пайплайн что и 6_generate_answers_v2
         with console.status(f"Retrieval: {qid}…"):
             t0 = time.perf_counter()
-            contexts, raw_chunks = retrieve_context(question_text, author_filter, cfg)
+            contexts, raw_chunks = retrieve_context(q, cfg)
             t_ret = time.perf_counter() - t0
 
         console.print(f"  Найдено чанков: {len(contexts)} ({t_ret:.2f}s)")
@@ -216,6 +270,9 @@ def main() -> None:
                 t_llm = time.perf_counter() - t0
             console.print(f"  LLM ({t_llm:.1f}s): {answer[:150]}…" if len(answer) > 150 else f"  LLM: {answer}")
 
+        contexts_by_qid[qid] = contexts
+        answers_by_qid[qid] = answer
+
         sample_kwargs = dict(
             user_input=question_text,
             retrieved_contexts=contexts,
@@ -234,20 +291,57 @@ def main() -> None:
         })
 
     # ── Запуск оценки ─────────────────────────────────────────────────────
-    from ragas import evaluate
+    from ragas import evaluate, RunConfig
+
+    # ВАЖНО: запускаем evaluate() отдельно для каждой метрики.
+    # Если передать все 4 сразу — asyncio создаёт все Job-ы одновременно,
+    # таймеры тикают параллельно, и Jobs 1-3 падают пока ждут Job 0.
+    # При отдельных вызовах каждая метрика получает полный timeout.
+    # llama3:8b: ~70s / вызов. 3 чанка × ~5 вызовов = ~350s — нужен запас ≥ 600s.
+    run_cfg = RunConfig(max_workers=1, timeout=1800)
 
     dataset = EvaluationDataset(samples=samples)
     console.rule("[bold]Запуск RAGAS evaluate…[/bold]")
 
-    t0 = time.perf_counter()
-    with console.status("Оценка (может занять несколько минут для каждого вопроса)…"):
-        result = evaluate(dataset=dataset, metrics=metrics)
-    t_eval = time.perf_counter() - t0
+    import pandas as pd
 
-    console.print(f"  Оценка завершена за {t_eval:.1f}s")
+    all_metric_dfs: list[pd.DataFrame] = []
+    t_total = 0.0
+    for metric in metrics:
+        metric_name = metric.__class__.__name__
+        with console.status(f"  {metric_name}…"):
+            t0 = time.perf_counter()
+            try:
+                r = evaluate(dataset=dataset, metrics=[metric], run_config=run_cfg)
+                df = r.to_pandas()
+                all_metric_dfs.append(df)
+                elapsed = time.perf_counter() - t0
+                t_total += elapsed
+                console.print(f"  [green]✓[/green] {metric_name}: {elapsed:.0f}s")
+            except Exception as exc:
+                elapsed = time.perf_counter() - t0
+                t_total += elapsed
+                console.print(f"  [red]✗[/red] {metric_name}: {exc} ({elapsed:.0f}s)")
+
+    console.print(f"  Всего: {t_total:.0f}s")
+
+    # Объединяем результаты в один DataFrame
+    if all_metric_dfs:
+        base_cols = ["user_input", "response", "retrieved_contexts", "reference"]
+        result_df = all_metric_dfs[0].copy()
+        for df in all_metric_dfs[1:]:
+            metric_cols_extra = [c for c in df.columns if c not in base_cols]
+            for col in metric_cols_extra:
+                result_df[col] = df[col].values
+    else:
+        result_df = pd.DataFrame()
+
+    t_eval = t_total
 
     # ── Результаты ────────────────────────────────────────────────────────
-    result_df = result.to_pandas()
+    if result_df.empty:
+        console.print("[red]Нет результатов — все метрики упали.[/red]")
+        sys.exit(1)
     metric_cols = [c for c in result_df.columns if c not in ("user_input", "response", "retrieved_contexts", "reference")]
 
     res_tbl = Table(title="RAGAS Results", box=box.ROUNDED, show_lines=True)
@@ -289,6 +383,91 @@ def main() -> None:
         )
     console.print(agg_tbl)
 
+    # ── Покрытие аспектов (sub_aspects → ContextRecall) ─────────────────────
+    aspect_meta: list[dict] = []
+    for q in questions:
+        qid = q["id"]
+        sub_aspects = q.get("sub_aspects", [])
+        filled = [a for a in sub_aspects if a.get("text", "").strip()]
+        if not filled:
+            continue
+        for aspect in filled:
+            aspect_meta.append({
+                "qid": qid,
+                "aid": aspect["id"],
+                "label": aspect.get("label", aspect["id"]),
+                "text": aspect["text"],
+            })
+
+    # ── Покрытие аспектов через embedding cosine-similarity (без LLM) ──────
+    # Для каждого sub_aspect проверяем, покрывает ли хотя бы один из
+    # retrieved_contexts этот аспект семантически (cosine sim > threshold).
+    # Используем BAAI/bge-m3 напрямую — быстро, без LLM-вызовов.
+    aspect_coverage: list[dict] = []
+    if aspect_meta:
+        console.rule("[bold]Покрытие аспектов — Cosine Similarity (bge-m3)[/bold]")
+        console.print(f"  Аспектов для оценки: {len(aspect_meta)}")
+        try:
+            import numpy as np
+
+            COVERAGE_THRESHOLD = 0.45  # cosine sim для BAAI/bge-m3
+
+            t0 = time.perf_counter()
+            embed_model = get_embed_model()
+
+            for meta in aspect_meta:
+                qid = meta["qid"]
+                ctxs = contexts_by_qid.get(qid, [])
+                if not ctxs:
+                    aspect_coverage.append({**meta, "max_sim": None, "covered": False})
+                    continue
+
+                # Encode aspect text и все chunks
+                asp_emb = embed_model.encode(
+                    [meta["text"]], normalize_embeddings=True, show_progress_bar=False
+                )[0]
+                ctx_embs = embed_model.encode(
+                    ctxs, normalize_embeddings=True, batch_size=16, show_progress_bar=False
+                )
+                sims = ctx_embs @ asp_emb  # cosine similarity (vectors уже нормализованы)
+                max_sim = float(np.max(sims))
+                covered = max_sim >= COVERAGE_THRESHOLD
+                aspect_coverage.append({**meta, "max_sim": round(max_sim, 4), "covered": covered})
+
+            t_asp = time.perf_counter() - t0
+            console.print(f"  Завершено за {t_asp:.1f}s")
+
+            asp_tbl = Table(
+                title=f"Покрытие аспектов (cosine_sim ≥ {COVERAGE_THRESHOLD})",
+                box=box.ROUNDED, show_lines=True,
+            )
+            asp_tbl.add_column("ID", style="cyan", min_width=7)
+            asp_tbl.add_column("Аспект", max_width=45)
+            asp_tbl.add_column("Max Sim", justify="right", min_width=8)
+            asp_tbl.add_column("Покрыт?", justify="center", min_width=8)
+            for ac in aspect_coverage:
+                sim_v = ac["max_sim"]
+                if sim_v is None:
+                    sim_str = "[dim]N/A[/dim]"
+                    cov_str = "[dim]—[/dim]"
+                else:
+                    color = "green" if sim_v >= 0.6 else "yellow" if sim_v >= COVERAGE_THRESHOLD else "red"
+                    sim_str = f"[{color}]{sim_v:.3f}[/{color}]"
+                    cov_str = "[green]✓[/green]" if ac["covered"] else "[red]✗[/red]"
+                asp_tbl.add_row(ac["aid"], ac["label"][:45], sim_str, cov_str)
+            console.print(asp_tbl)
+
+            covered_count = sum(1 for ac in aspect_coverage if ac["covered"])
+            total_count = len(aspect_coverage)
+            pct = 100 * covered_count / total_count if total_count else 0
+            color = "green" if pct >= 70 else "yellow" if pct >= 40 else "red"
+            console.print(
+                f"  Покрытых аспектов: [{color}]{covered_count}/{total_count} ({pct:.0f}%)[/{color}]"
+            )
+        except Exception as exc:
+            console.print(f"[red]Ошибка оценки аспектов: {exc}[/red]")
+            import traceback; traceback.print_exc()
+
     # ── Save ──────────────────────────────────────────────────────────────
     if args.save:
         out_dir = ROOT / "tests" / "results"
@@ -315,6 +494,16 @@ def main() -> None:
         for col in metric_cols:
             series = result_df[col].dropna()
             report["aggregate"][col] = round(series.mean(), 4) if not series.empty else None
+        if aspect_coverage:
+            report["aspect_coverage"] = [
+                {
+                    "id": ac["aid"],
+                    "label": ac["label"],
+                    "max_cosine_sim": ac["max_sim"],
+                    "covered": ac["covered"],
+                }
+                for ac in aspect_coverage
+            ]
         with open(out, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
         console.print(f"\n[dim]Отчёт сохранён: {out}[/dim]")
@@ -323,10 +512,9 @@ def main() -> None:
     # ── Интерпретация ────────────────────────────────────────────────────
     console.print(Panel(
         "[bold]Как интерпретировать:[/bold]\n"
-        "  [cyan]ContextPrecision[/cyan] — доля релевантных чанков среди найденных (выше = лучший retrieval)\n"
-        "  [cyan]ContextRecall[/cyan]    — доля нужной информации, попавшей в контекст (выше = меньше пропусков)\n"
-        "  [cyan]Faithfulness[/cyan]     — модель отвечает ТОЛЬКО из контекста (выше = меньше галлюцинаций)\n"
-        "  [cyan]ResponseRelevancy[/cyan]— ответ раскрывает вопрос (выше = более полный ответ)\n\n"
+        "  [cyan]SemanticSimilarity[/cyan] — cosine-sim между LLM-ответом и эталоном (\u2265 0.7 = хорошо)\n"
+        "  [cyan]ResponseRelevancy[/cyan] — ответ раскрывает вопрос (выше = более полный ответ)\n"
+        "  [cyan]Покрытие аспектов[/cyan] — доля аспектов с cosine_sim \u2265 0.45 хотя бы с одним чанком\n\n"
         "  [green]≥0.7[/green] хорошо  [yellow]0.4–0.7[/yellow] приемлемо  [red]<0.4[/red] плохо",
         title="Справка",
         border_style="dim",

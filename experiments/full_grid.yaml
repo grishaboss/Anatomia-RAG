@@ -1,0 +1,293 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# experiments/full_grid.yaml
+# Комплексный конфиг для run_experiment_grid.py
+#
+# Оси экспериментирования:
+#   • embed_strategy    — как формируется текст для эмбеддинга каждого чанка
+#   • embedding_model   — HuggingFace модель для векторизации
+#   • merge_window      — склеивать N соседних чанков из одного источника
+#   • max_chunk_chars   — разбивать чанки длиннее N символов (0 = не разбивать)
+#   • top_k             — сколько чанков идёт в контекст
+#   • hyde              — LLM генерирует гипотетический ответ перед поиском
+#   • llm_model         — Ollama-модель для генерации ответов
+#   • prompt_template   — шаблон промпта
+#   • ragas.judge_model — Ollama-модель для RAGAS-судьи
+#   • ragas.metrics     — набор метрик RAGAS
+#
+# Запуск:
+#   python scripts/run_experiment_grid.py
+#   python scripts/run_experiment_grid.py --experiments baseline text_only
+#   python scripts/run_experiment_grid.py --skip-ragas   # только retrieval+generation
+#   python scripts/run_experiment_grid.py --skip-generation  # только retrieval
+#   python scripts/run_experiment_grid.py --ids I.3      # только нужные вопросы
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ── Источник запросов и эталонных ответов ─────────────────────────────────────
+# Скрипт читает question, reference и sub_aspects из этого файла.
+ground_truth_file: "tests/ground_truth.json"
+
+
+# ── Шаблоны промптов ──────────────────────────────────────────────────────────
+# Переменные: {context} — отформатированные чанки, {question} — вопрос.
+prompt_templates:
+
+  standard: |
+    Используй только следующий контекст для ответа на вопрос по анатомии человека.
+    Если информации недостаточно — скажи об этом.
+
+    Контекст:
+    {context}
+
+    Вопрос: {question}
+
+    Ответ:
+
+  focused: |
+    Ты опытный анатом. Отвечай структурированно: сначала общее строение, затем
+    особенности отделов, в конце соединения/васкуляризация/иннервация.
+    Используй только факты из контекста.
+
+    Контекст:
+    {context}
+
+    Вопрос: {question}
+
+    Структурированный ответ:
+
+  concise: |
+    Кратко ответь на вопрос (3–5 предложений), используя только контекст.
+
+    Контекст: {context}
+
+    Вопрос: {question}
+    Краткий ответ:
+
+
+# ── Глобальные настройки RAGAS ────────────────────────────────────────────────
+# Переопределяются на уровне эксперимента в поле ragas:
+ragas_defaults:
+  enabled: true
+  timeout: 900          # секунд на одну метрику (llama3:8b ~70s/вызов)
+  metrics:              # relevancy — быстрая (~40s); остальные ~300-600s
+    - relevancy
+  # Все метрики:
+  # - relevancy      (ResponseRelevancy)            — быстрая, без reference
+  # - faithfulness   (Faithfulness)                 — медленная, без reference
+  # - precision      (LLMContextPrecisionWithReference) — медленная, нужен reference
+  # - recall         (LLMContextRecall)             — медленная, нужен reference
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Эксперименты
+# ═══════════════════════════════════════════════════════════════════════════════
+experiments:
+
+  # ── Текущий baseline ─────────────────────────────────────────────────────────
+  - name: "baseline"
+    description: "Текущий pipeline: heading embed, bge-m3, top7, gemma3:4b"
+
+    # Что эмбеддируем:
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: heading_only    # heading_only | text_only | heading_plus_text
+
+    # Пре-обработка чанков:
+    merge_window: 1       # 1 = не мержить; 2/3 = склеить N соседних чанков из одного файла
+    max_chunk_chars: 0    # 0 = не сплитить; напр. 2000 — разбить длинные чанки
+
+    # Retrieval:
+    top_k: 7
+    hyde: false
+
+    # Generation:
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+
+    # RAGAS:
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── Эмбеддинг по полному тексту ──────────────────────────────────────────────
+  - name: "text_only"
+    description: "embed = весь текст чанка (без заголовка)"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: text_only
+    merge_window: 1
+    max_chunk_chars: 0
+    top_k: 7
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── Заголовок + начало текста ─────────────────────────────────────────────────
+  - name: "heading_plus_500"
+    description: "embed = заголовок + первые 500 символов текста"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: heading_plus_text
+    embed_chars: 500      # только для heading_plus_text
+    merge_window: 1
+    max_chunk_chars: 0
+    top_k: 7
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  - name: "heading_plus_full"
+    description: "embed = заголовок + весь текст"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: heading_plus_text
+    embed_chars: 0        # 0 = весь текст
+    merge_window: 1
+    max_chunk_chars: 0
+    top_k: 7
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── Слияние чанков ────────────────────────────────────────────────────────────
+  - name: "merge2_text"
+    description: "Склеиваем по 2 соседних чанка из одного файла, embed = text"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: text_only
+    merge_window: 2
+    max_chunk_chars: 0
+    top_k: 5              # меньше чанков, т.к. каждый вдвое больше
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  - name: "merge3_text"
+    description: "Склеиваем по 3 соседних чанка из одного файла, embed = text"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: text_only
+    merge_window: 3
+    max_chunk_chars: 0
+    top_k: 5
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── Больше чанков в контексте ─────────────────────────────────────────────────
+  - name: "text_top10"
+    description: "embed = текст, top_k=10"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: text_only
+    merge_window: 1
+    max_chunk_chars: 0
+    top_k: 10
+    hyde: false
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── HyDE ─────────────────────────────────────────────────────────────────────
+  - name: "text_hyde"
+    description: "embed = текст + HyDE (LLM генерирует гипотетический ответ)"
+    embedding_model: "BAAI/bge-m3"
+    embed_strategy: text_only
+    merge_window: 1
+    max_chunk_chars: 0
+    top_k: 7
+    hyde: true
+    llm_model: "gemma3:4b"
+    prompt_template: standard
+    ragas:
+      judge_model: "llama3:8b"
+      metrics: [relevancy]
+
+  # ── Другая embedding модель ───────────────────────────────────────────────────
+  # Раскомментируй если хочешь протестировать другую модель.
+  # Первый запуск будет медленным — модель скачается из HuggingFace.
+  #
+  # - name: "e5_text"
+  #   description: "embed = text, multilingual-e5-large"
+  #   embedding_model: "intfloat/multilingual-e5-large"
+  #   embed_strategy: text_only
+  #   merge_window: 1
+  #   max_chunk_chars: 0
+  #   top_k: 7
+  #   hyde: false
+  #   llm_model: "gemma3:4b"
+  #   prompt_template: standard
+  #   ragas:
+  #     judge_model: "llama3:8b"
+  #     metrics: [relevancy]
+
+  # ── Другой LLM для генерации ──────────────────────────────────────────────────
+  # - name: "llama_generation"
+  #   description: "Лучшая стратегия + llama3:8b для генерации"
+  #   embedding_model: "BAAI/bge-m3"
+  #   embed_strategy: text_only
+  #   merge_window: 1
+  #   max_chunk_chars: 0
+  #   top_k: 7
+  #   hyde: false
+  #   llm_model: "llama3:8b"          # другая LLM для ответов
+  #   prompt_template: focused
+  #   ragas:
+  #     judge_model: "llama3:8b"
+  #     metrics: [relevancy]
+
+  # ── Другой судья RAGAS ────────────────────────────────────────────────────────
+  # - name: "baseline_llama32_judge"
+  #   description: "baseline + llama3.2 как RAGAS судья"
+  #   embedding_model: "BAAI/bge-m3"
+  #   embed_strategy: heading_only
+  #   merge_window: 1
+  #   max_chunk_chars: 0
+  #   top_k: 7
+  #   hyde: false
+  #   llm_model: "gemma3:4b"
+  #   prompt_template: standard
+  #   ragas:
+  #     judge_model: "llama3.2:latest"
+  #     metrics: [relevancy]
+
+  # ── Другой промпт ─────────────────────────────────────────────────────────────
+  # - name: "focused_prompt"
+  #   description: "Лучшая стратегия + structured prompt"
+  #   embedding_model: "BAAI/bge-m3"
+  #   embed_strategy: text_only
+  #   merge_window: 1
+  #   max_chunk_chars: 0
+  #   top_k: 7
+  #   hyde: false
+  #   llm_model: "gemma3:4b"
+  #   prompt_template: focused     # <-- другой шаблон
+  #   ragas:
+  #     judge_model: "llama3:8b"
+  #     metrics: [relevancy]
+
+  # ── Полный набор метрик (медленно!) ───────────────────────────────────────────
+  # - name: "best_all_metrics"
+  #   description: "Лучший вариант со всеми RAGAS-метриками"
+  #   embedding_model: "BAAI/bge-m3"
+  #   embed_strategy: text_only
+  #   merge_window: 1
+  #   max_chunk_chars: 0
+  #   top_k: 7
+  #   hyde: false
+  #   llm_model: "gemma3:4b"
+  #   prompt_template: standard
+  #   ragas:
+  #     judge_model: "llama3:8b"
+  #     timeout: 1800
+  #     metrics: [relevancy, faithfulness, precision, recall]
