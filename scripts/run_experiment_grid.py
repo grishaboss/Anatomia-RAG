@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import itertools
 import json
 import re
 import sys
@@ -61,9 +62,9 @@ METRIC_ALIASES = {
 # Пре-обработка чанков
 # ══════════════════════════════════════════════════════════════════════════════
 
-def load_all_chunks(main_cfg: dict) -> list[dict]:
-    """Загрузить все чанки из data/chunks/*.jsonl."""
-    chunks_dir = ROOT / main_cfg["paths"]["chunks_dir"]
+def load_all_chunks(chunks_dir_override: str, main_cfg: dict | None = None) -> list[dict]:
+    """Загрузить все чанки из указанной директории."""
+    chunks_dir = ROOT / chunks_dir_override
     chunks: list[dict] = []
     for path in sorted(chunks_dir.glob("*_chunks.jsonl")):
         with open(path, encoding="utf-8") as f:
@@ -72,6 +73,18 @@ def load_all_chunks(main_cfg: dict) -> list[dict]:
                 if line:
                     chunks.append(json.loads(line))
     return chunks
+
+
+_raw_chunks_cache: dict[str, list[dict]] = {}
+
+
+def _get_raw_chunks(chunks_dir: str, main_cfg: dict) -> list[dict]:
+    """Вернуть чанки из кэша или загрузить их (кэш по пути директории)."""
+    if chunks_dir not in _raw_chunks_cache:
+        with console.status(f"Загружаю чанки из {chunks_dir}…"):
+            _raw_chunks_cache[chunks_dir] = load_all_chunks(chunks_dir)
+        console.print(f"  Чанков загружено: {len(_raw_chunks_cache[chunks_dir])} из {chunks_dir}")
+    return _raw_chunks_cache[chunks_dir]
 
 
 def merge_chunks(chunks: list[dict], window: int) -> list[dict]:
@@ -193,10 +206,11 @@ def get_chunk_embeddings(
     chars: int,
     merge_window: int,
     max_chars: int,
+    chunks_dir: str = "",
     batch_size: int = 128,
 ) -> np.ndarray:
-    """Закодировать все чанки; кэш по (model_name, strategy, chars, merge, split)."""
-    key = (model_name, strategy, chars, merge_window, max_chars)
+    """Закодировать все чанки; кэш по (model_name, strategy, chars, merge, split, chunks_dir)."""
+    key = (model_name, strategy, chars, merge_window, max_chars, chunks_dir)
     if key not in _emb_cache:
         texts = [get_embed_text(c, strategy, chars) for c in chunks]
         console.print(
@@ -312,7 +326,8 @@ def run_ragas(
     from langchain_huggingface import HuggingFaceEmbeddings
 
     merged_cfg = {**ragas_defaults, **ragas_cfg}
-    judge_model = merged_cfg.get("judge_model", main_cfg["llm"]["model"])
+    # judge_model: явно заданный > llm_model из эксперимента > глобальный llm
+    judge_model = merged_cfg.get("judge_model") or merged_cfg.get("llm_model") or main_cfg["llm"]["model"]
     timeout = merged_cfg.get("timeout", 900)
     metric_names: list[str] = merged_cfg.get("metrics", ["relevancy"])
 
@@ -412,6 +427,7 @@ _CFG_COLS = [
     "hyde",
     "llm_model",
     "prompt_template",
+    "chunks_dir",
 ]
 
 
@@ -543,6 +559,84 @@ def update_summary_csv(exp_result: dict, result_file: Path) -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Grid expansion
+# ══════════════════════════════════════════════════════════════════════════════
+
+_STRATEGY_SLUG = {
+    "heading_only":       "ho",
+    "text_only":          "to",
+    "heading_plus_text":  "hpt",
+}
+
+
+def expand_grid_axes(grid_cfg: dict) -> list[dict]:
+    """Генерирует декартово произведение из grid_axes.
+
+    grid_defaults — базовые значения (применяются ко всем комбинациям).
+    grid_axes     — { param: [val1, val2, ...] } — оси перебора.
+
+    Каждой комбинации присваивается детерминированное поле 'name'
+    (slug из значений осей).
+    """
+    axes: dict = grid_cfg.get("grid_axes")
+    if not axes:
+        return []
+
+    defaults: dict = dict(grid_cfg.get("grid_defaults", {}))
+    defaults.setdefault("ragas", {"metrics": ["relevancy"]})
+    defaults.setdefault("prompt_template", "standard")
+
+    param_names = list(axes.keys())
+    param_values = [
+        v if isinstance(v, list) else [v]
+        for v in axes.values()
+    ]
+
+    experiments: list[dict] = []
+    for combo in itertools.product(*param_values):
+        exp = dict(defaults)
+        exp.update(dict(zip(param_names, combo)))
+
+        # ── judge_model = llm_model (если не задан явно) ──
+        ragas_cfg = dict(exp.get("ragas") or {})
+        if "judge_model" not in ragas_cfg:
+            ragas_cfg["judge_model"] = exp.get("llm_model", defaults.get("llm_model", "gemma3:4b"))
+        exp["ragas"] = ragas_cfg
+
+        # ── Автоимя: детерминированный slug ──
+        parts: list[str] = []
+        for k, v in zip(param_names, combo):
+            if k == "embed_strategy":
+                parts.append(_STRATEGY_SLUG.get(str(v), str(v)))
+            elif k == "top_k":
+                parts.append(f"k{v}")
+            elif k == "merge_window":
+                parts.append(f"m{v}")
+            elif k == "max_chunk_chars" and v:
+                parts.append(f"s{v}")
+            elif k == "embed_chars" and v:
+                parts.append(f"ec{v}")
+            elif k == "hyde" and v:
+                parts.append("hyde")
+            elif k == "prompt_template" and v != "standard":
+                parts.append(f"p_{v[:4]}")
+            elif k == "llm_model":
+                slug = re.sub(r"[^a-z0-9]", "", str(v).lower())[:8]
+                parts.append(slug)
+            elif k not in ("max_chunk_chars", "embed_chars", "hyde", "llm_model"):
+                parts.append(f"{k[:3]}_{v}")
+
+        exp["name"] = "g__" + "__".join(parts)
+        if "description" not in exp:
+            exp["description"] = " | ".join(
+                f"{k}={v}" for k, v in zip(param_names, combo)
+            )
+        experiments.append(exp)
+
+    return experiments
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Main
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -561,6 +655,10 @@ def main() -> None:
                         help="Пропустить эксперименты с hyde: true")
     parser.add_argument("--top-k", type=int, default=None,
                         help="Переопределить top_k для всех экспериментов")
+    parser.add_argument("--grid-only", action="store_true",
+                        help="Использовать только grid_axes (игнорировать experiments[])")
+    parser.add_argument("--grid", action="store_true",
+                        help="Добавить grid_axes эксперименты к ручным experiments[]")
     args = parser.parse_args()
 
     # ── Загрузка конфигов ──
@@ -587,8 +685,22 @@ def main() -> None:
         console.print("[red]Нет вопросов для тестирования.[/red]")
         sys.exit(1)
 
-    # ── Фильтрация экспериментов ──
-    experiments: list[dict] = grid_cfg.get("experiments", [])
+    # ── Сборка списка экспериментов ──
+    manual_experiments: list[dict] = grid_cfg.get("experiments", [])
+    grid_experiments: list[dict] = expand_grid_axes(grid_cfg)
+
+    if args.grid_only:
+        if not grid_experiments:
+            console.print("[red]grid_only: grid_axes не найден в конфиге.[/red]")
+            sys.exit(1)
+        experiments = grid_experiments
+        console.print(f"  [dim]Режим: grid_only — {len(experiments)} комбинаций из grid_axes[/dim]")
+    elif args.grid:
+        experiments = manual_experiments + grid_experiments
+        console.print(f"  [dim]Режим: grid — {len(manual_experiments)} ручных + {len(grid_experiments)} grid[/dim]")
+    else:
+        experiments = manual_experiments
+
     if args.experiments:
         experiments = [e for e in experiments if e["name"] in args.experiments]
     if args.no_hyde:
@@ -597,15 +709,16 @@ def main() -> None:
         console.print("[red]Нет экспериментов для запуска.[/red]")
         sys.exit(1)
 
-    # ── Загрузка чанков ──
-    console.rule("[bold]run_experiment_grid[/bold]")
-    console.print(f"  Вопросов: {len(queries)} | Экспериментов: {len(experiments)}")
-    with console.status("Загружаю чанки…"):
-        raw_chunks = load_all_chunks(main_cfg)
-    console.print(f"  Чанков из jsonl: {len(raw_chunks)}")
+    # Показать сколько уникальных ChromaDB-индексов потребуется
+    _idx_keys = ("embedding_model", "embed_strategy", "embed_chars", "merge_window", "max_chunk_chars")
+    unique_indices = {tuple(str(e.get(k, "")) for k in _idx_keys) for e in experiments}
+    console.print(f"  Уникальных ChromaDB-коллекций: {len(unique_indices)}")
 
     # ── Запуск экспериментов ──
+    console.rule("[bold]run_experiment_grid[/bold]")
+    console.print(f"  Вопросов: {len(queries)} | Экспериментов: {len(experiments)}")
     all_results: list[dict] = []
+    default_chunks_dir = main_cfg["paths"]["chunks_dir"]  # дефолт из config.yaml
 
     for exp in experiments:
         exp_name = exp["name"]
@@ -622,9 +735,15 @@ def main() -> None:
         prompt_key = exp.get("prompt_template", "standard")
         prompt_template = prompt_templates.get(prompt_key, "{context}\n\n{question}")
 
+        # Директория чанков (ось эксперимента, default → config.yaml)
+        chunks_dir_str = exp.get("chunks_dir") or default_chunks_dir
+        if exp.get("chunks_dir"):
+            console.print(f"  [альт. чанки] {chunks_dir_str}")
+        raw_chunks = _get_raw_chunks(chunks_dir_str, main_cfg)
+
         # Пре-обработка чанков
         chunks = preprocess_chunks(raw_chunks, exp)
-        console.print(f"  Чанков после merge/split: {len(chunks)}")
+        console.print(f"  Чанков после merge/split: {len(chunks)} (из {chunks_dir_str})")
 
         # Embedding модель
         emb_model_name = exp.get("embedding_model", main_cfg["embedding"]["model"])
@@ -634,6 +753,7 @@ def main() -> None:
         chunk_embs = get_chunk_embeddings(
             chunks, embed_model, emb_model_name,
             strategy, embed_chars, merge_w, max_chars,
+            chunks_dir=chunks_dir_str,
         )
 
         exp_result = {
@@ -649,6 +769,7 @@ def main() -> None:
                 "hyde": hyde,
                 "llm_model": llm_model,
                 "prompt_template": prompt_key,
+                "chunks_dir": chunks_dir_str,
             },
             "query_results": [],
         }
@@ -723,7 +844,10 @@ def main() -> None:
         # RAGAS
         ragas_scores: dict[str, float | None] = {}
         if not args.skip_ragas and ragas_defaults.get("enabled", True):
-            ragas_exp_cfg = exp.get("ragas", {})
+            ragas_exp_cfg = dict(exp.get("ragas") or {})
+            # judge_model = llm_model эксперимента если не задан явно
+            if "judge_model" not in ragas_exp_cfg:
+                ragas_exp_cfg["judge_model"] = llm_model
             if ragas_exp_cfg.get("enabled", True) is not False:
                 console.print("\n  [bold]RAGAS…[/bold]")
                 ragas_scores = run_ragas(

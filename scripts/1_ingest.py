@@ -446,19 +446,84 @@ def main() -> None:
             "Используется после смены стратегии чанкинга."
         ),
     )
+    parser.add_argument(
+        "--chunks-dir",
+        default=None,
+        help=(
+            "Переопределить директорию для сохранения чанков (относительно корня проекта). "
+            "Например: data/chunks_no_gocr. По умолчанию — значение из config.yaml."
+        ),
+    )
+    parser.add_argument(
+        "--skip-authors",
+        nargs="*",
+        metavar="AUTHOR",
+        default=[],
+        help=(
+            "Пропустить файлы из указанных подпапок books/ (по имени автора). "
+            "Например: --skip-authors Гайворонский"
+        ),
+    )
+    parser.add_argument(
+        "--no-force-ocr-authors",
+        nargs="*",
+        metavar="AUTHOR",
+        default=[],
+        help=(
+            "Не применять force OCR для файлов этих авторов — Docling будет использовать "
+            "нативный текстовый слой PDF (если есть). "
+            "Например: --no-force-ocr-authors Гайворонский"
+        ),
+    )
     args = parser.parse_args()
 
     config = load_config()
 
+    # Переопределение chunks_dir через CLI
+    chunks_dir_path = ROOT / (args.chunks_dir if args.chunks_dir else config["paths"]["chunks_dir"])
+
     dirs: dict[str, Path] = {
         "processed": ROOT / config["paths"]["processed_dir"],
         "figures":   ROOT / config["paths"]["figures_dir"],
-        "chunks":    ROOT / config["paths"]["chunks_dir"],
+        "chunks":    chunks_dir_path,
     }
     for d in dirs.values():
         d.mkdir(parents=True, exist_ok=True)
 
-    manifest_path = ROOT / "data" / "manifest.json"
+    if args.chunks_dir:
+        logger.info(f"Chunks dir переопределён: {chunks_dir_path}")
+
+    # Нормализуем авторов для фильтрации
+    skip_authors = {a.strip().lower() for a in (args.skip_authors or [])}
+    no_force_ocr_authors = {a.strip().lower() for a in (args.no_force_ocr_authors or [])}
+
+    # Изменяем force_ocr_for_files в конфиге — убираем файлы для no_force_ocr_authors
+    if no_force_ocr_authors:
+        original_force_ocr = config["ingestion"].get("force_ocr_for_files", [])
+        books_root = ROOT / config["paths"]["books_dir"]
+        filtered_force_ocr = []
+        for p_str in original_force_ocr:
+            p = Path(p_str)
+            # Определить автора по первой части пути внутри books/
+            try:
+                rel = p.relative_to(books_root) if p.is_absolute() else p
+                author_folder = rel.parts[0].lower() if rel.parts else ""
+            except Exception:
+                parts = Path(p_str).parts
+                author_folder = ""
+                for i, part in enumerate(parts):
+                    if part.lower() in ("books",):
+                        author_folder = parts[i + 1].lower() if i + 1 < len(parts) else ""
+                        break
+            if author_folder not in no_force_ocr_authors:
+                filtered_force_ocr.append(p_str)
+            else:
+                logger.info(f"Force OCR отключён для: {p_str}")
+        config["ingestion"]["force_ocr_for_files"] = filtered_force_ocr
+
+    # Имя манифеста зависит от chunks_dir (разные пресеты → разные манифесты)
+    manifest_name = "manifest.json" if not args.chunks_dir else f"manifest_{chunks_dir_path.name}.json"
+    manifest_path = ROOT / "data" / manifest_name
     manifest = load_manifest(manifest_path)
 
     if args.file:
@@ -466,6 +531,21 @@ def main() -> None:
         files = [p if p.is_absolute() else ROOT / p]
     else:
         files = collect_source_files(config)
+        # Фильтрация по авторам
+        if skip_authors:
+            books_root = ROOT / config["paths"]["books_dir"]
+            before = len(files)
+            filtered = []
+            for f in files:
+                try:
+                    rel = f.relative_to(books_root)
+                    author_folder = rel.parts[0].lower() if rel.parts else ""
+                except ValueError:
+                    author_folder = ""
+                if author_folder not in skip_authors:
+                    filtered.append(f)
+            files = filtered
+            logger.info(f"После фильтрации --skip-authors {skip_authors}: {len(files)}/{before} файлов")
         logger.info(f"Найдено {len(files)} файлов")
 
     processed = skipped = failed = 0
@@ -496,6 +576,7 @@ def main() -> None:
     logger.info(
         f"\nГотово.  Обработано: {processed}  |  Пропущено (без изменений): {skipped}  |  Ошибок: {failed}"
     )
+    logger.info(f"Чанки сохранены в: {chunks_dir_path}")
 
 
 if __name__ == "__main__":

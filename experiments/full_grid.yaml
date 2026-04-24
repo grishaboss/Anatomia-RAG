@@ -1,293 +1,220 @@
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # experiments/full_grid.yaml
-# Комплексный конфиг для run_experiment_grid.py
 #
-# Оси экспериментирования:
-#   • embed_strategy    — как формируется текст для эмбеддинга каждого чанка
-#   • embedding_model   — HuggingFace модель для векторизации
-#   • merge_window      — склеивать N соседних чанков из одного источника
-#   • max_chunk_chars   — разбивать чанки длиннее N символов (0 = не разбивать)
-#   • top_k             — сколько чанков идёт в контекст
-#   • hyde              — LLM генерирует гипотетический ответ перед поиском
-#   • llm_model         — Ollama-модель для генерации ответов
-#   • prompt_template   — шаблон промпта
-#   • ragas.judge_model — Ollama-модель для RAGAS-судьи
-#   • ragas.metrics     — набор метрик RAGAS
+# Принцип: объявляешь переменные и список значений для каждой.
+# Скрипт строит декартово произведение и прогоняет все комбинации.
 #
 # Запуск:
-#   python scripts/run_experiment_grid.py
-#   python scripts/run_experiment_grid.py --experiments baseline text_only
-#   python scripts/run_experiment_grid.py --skip-ragas   # только retrieval+generation
-#   python scripts/run_experiment_grid.py --skip-generation  # только retrieval
-#   python scripts/run_experiment_grid.py --ids I.3      # только нужные вопросы
-# ═══════════════════════════════════════════════════════════════════════════════
+#   python scripts/run_experiment_grid.py --grid-only --ids I.3
+#   python scripts/run_experiment_grid.py --grid-only --ids I.3 --skip-ragas
+#   python scripts/orchestrate.py --grid-only --build-index --ids I.3
+# ===============================================================================
 
 
-# ── Источник запросов и эталонных ответов ─────────────────────────────────────
-# Скрипт читает question, reference и sub_aspects из этого файла.
+# -- Источник запросов и эталонных ответов -------------------------------------
 ground_truth_file: "tests/ground_truth.json"
 
 
-# ── Шаблоны промптов ──────────────────────────────────────────────────────────
-# Переменные: {context} — отформатированные чанки, {question} — вопрос.
+# -- Шаблоны промптов ----------------------------------------------------------
 prompt_templates:
 
   standard: |
-    Используй только следующий контекст для ответа на вопрос по анатомии человека.
-    Если информации недостаточно — скажи об этом.
+    # ИНСТРУКЦИЯ:
+    Ты — редактор учебного конспекта по анатомии человека. Твоя задача: найти в предоставленных фрагментах учебников всё, что относится к вопросу и каждому подвопросу, и организовать ответ близко к тексту источников.
 
-    Контекст:
+    # КАТЕГОРИЧЕСКИЕ ПРАВИЛА:
+    1. Используй ИСКЛЮЧИТЕЛЬНО текст из фрагментов ниже — не добавляй никаких фактов, цифр или терминов, которых нет в этих текстах.
+    2. Если по какому-то подвопросу информации в источниках нет — напиши: [нет в источниках].
+    3. Если Гайворонский и Сапин описывают одно и то же — пиши один раз без атрибуции.
+    4. Если авторы расходятся (разные формулировки, цифры, акценты) — укажи явно: «По Гайворонскому: ...; по Сапину: ...»
+    5. Латинские термины давай в скобках только если они есть в тексте фрагментов.
+    6. НЕ используй свои знания по анатомии.
+
+    # ФРАГМЕНТЫ ИЗ УЧЕБНИКОВ (используй ТОЛЬКО этот текст)
     {context}
 
-    Вопрос: {question}
+    # ВОПРОС
+    {question}
 
-    Ответ:
+    # ЗАДАНИЕ:
+    Найди в фрагментах выше ВСЁ, что относится к вопросу и каждому аспекту. 
+    Выпиши близко к тексту источников, организовав в единый ответ на экзаменационный 
+    вопрос на 3-4 абзаца - на 5 минут рассказа. Можешь суммаризировать текст не одходя от смысла. 
+    Пиши кратко но понятно. Если Гайворонский и Сапин расходятся — укажи явно. Если по какому-то 
+    аспекту данных в источниках нет — напиши [нет в источниках]. НЕ добавляй ничего от себя. 
+    Всегда указывай название на русском языке и на латыни, если это присутствует в тексте. 
+    Выстраивай ответ от общего к частному.
 
-  focused: |
-    Ты опытный анатом. Отвечай структурированно: сначала общее строение, затем
-    особенности отделов, в конце соединения/васкуляризация/иннервация.
-    Используй только факты из контекста.
+  step_by_step: |
+    # Инструкция:
+    Ты — редактор учебного конспекта по анатомии человека. Работай строго по шагам.
 
-    Контекст:
+    # КАТЕГОРИЧЕСКИЕ ПРАВИЛА:
+    1. Используй ИСКЛЮЧИТЕЛЬНО текст из фрагментов ниже.
+    2. Если информации нет — пиши: [нет в источниках].
+    3. Совпадения у авторов — пиши один раз без атрибуции.
+    4. Расхождения — указывай явно: «По Гайворонскому: ...; по Сапину: ...».
+    5. Латинские термины — только если есть в тексте фрагментов.
+    6. НЕ используй внешние знания.
+
+    # ФРАГМЕНТЫ ИЗ УЧЕБНИКОВ
     {context}
 
-    Вопрос: {question}
+    # ВОПРОС
+    {question}
 
-    Структурированный ответ:
+    # ЗАДАНИЕ — ВЫПОЛНИ ПО ШАГАМ:
+    Шаг 1. Выдели в вопросе ключевые аспекты/подтемы.
+    Шаг 2. Для каждого аспекта найди в {context} все релевантные предложения.
+    Шаг 3. Сравни находки от Гайворонского и Сапина: объедини совпадения, зафиксируй расхождения.
+    Шаг 4. Сформулируй ответ на 3–4 абзаца (5 минут рассказа), выстраивая от общего к частному.
+    Шаг 5. Проверь: все ли термины с латынью взяты из текста? Все ли отсутствующие данные помечены?
 
-  concise: |
-    Кратко ответь на вопрос (3–5 предложений), используя только контекст.
+    # ВЫВОД:
+    Только финальный ответ, без комментариев к шагам.
 
-    Контекст: {context}
+  aspect_decomposition: |
+    # Инструкция:
+    Ты — редактор учебного конспекта. Отвечай на вопрос через последовательную проработку его аспектов.
 
-    Вопрос: {question}
-    Краткий ответ:
+    # КАТЕГОРИЧЕСКИЕ ПРАВИЛА:
+    1. Используй ИСКЛЮЧИТЕЛЬНО текст из фрагментов ниже.
+    2. Если по аспекту информации нет — пиши: [нет в источниках].
+    3. Совпадения у авторов — без атрибуции; расхождения — с явным указанием.
+    4. Латинские термины — только из текста фрагментов.
+    5. БЕЗ внешних знаний.
+
+    # ФРАГМЕНТЫ ИЗ УЧЕБНИКОВ
+    {context}
+
+    # ВОПРОС И ЕГО АСПЕКТЫ
+    {question}
+    {sub_aspects}
+
+    # ЗАДАНИЕ:
+    1. Для каждого аспекта из {sub_aspects} найди релевантный текст в {context}.
+    2. Сформулируй по 1–2 предложения на аспект (близко к источнику, с латынью если есть).
+    3. Объедини ответы на аспекты в связный текст на 3–4 абзаца (5 минут рассказа).
+    4. Выстраивай логически: от общего определения → к деталям → к связям/функциям.
+
+    # ВЫВОД:
+    Только итоговый связный ответ, без маркировки аспектов.
+
+  self_critique: |
+    # Инструкция:
+    Ты — редактор учебного конспекта. Сформируй ответ, затем критически его проверь.
+
+    # КАТЕГОРИЧЕСКИЕ ПРАВИЛА:
+    1. Используй ИСКЛЮЧИТЕЛЬНО текст из фрагментов ниже.
+    2. Если информации нет — пиши: [нет в источниках].
+    3. Совпадения у авторов — без атрибуции; расхождения — с явным указанием.
+    4. Латинские термины — только из текста фрагментов.
+    5. БЕЗ внешних знаний.
+
+    # ФРАГМЕНТЫ ИЗ УЧЕБНИКОВ
+    {context}
+
+    # ВОПРОС
+    {question}
+
+    # ЭТАП 1: Черновик ответа
+    Сформулируй предварительный ответ на 3–4 абзаца (5 минут рассказа), от общего к частному.
+
+    # ЭТАП 2: Критическая проверка
+    Задай себе вопросы и исправь черновик при необходимости:
+    • Все ли утверждения подтверждены цитатами/фактами из {context}?
+    • Все ли латинские термины в скобках действительно есть в исходных фрагментах?
+    • Помечены ли [нет в источниках] все отсутствующие данные?
+    • Явно ли указаны расхождения между Гайворонским и Сапиным?
+    • Сохранён ли порядок «от общего к частному»?
+
+    # ЭТАП 3: Финальный ответ
+    Выведи только исправленную, проверенную версию. Без комментариев к проверке.
 
 
-# ── Глобальные настройки RAGAS ────────────────────────────────────────────────
-# Переопределяются на уровне эксперимента в поле ragas:
+# -- Настройки RAGAS -----------------------------------------------------------
 ragas_defaults:
   enabled: true
-  timeout: 900          # секунд на одну метрику (llama3:8b ~70s/вызов)
-  metrics:              # relevancy — быстрая (~40s); остальные ~300-600s
-    - relevancy
-  # Все метрики:
-  # - relevancy      (ResponseRelevancy)            — быстрая, без reference
-  # - faithfulness   (Faithfulness)                 — медленная, без reference
-  # - precision      (LLMContextPrecisionWithReference) — медленная, нужен reference
-  # - recall         (LLMContextRecall)             — медленная, нужен reference
+  timeout: 900
+  # Метрики:
+  #   relevancy    (ResponseRelevancy)                - быстрая, ~70s
+  #   faithfulness (Faithfulness)                     - медленная, ~300s
+  #   precision    (LLMContextPrecisionWithReference) - медленная, нужен reference
+  #   recall       (LLMContextRecall)                 - медленная, нужен reference
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Эксперименты
-# ═══════════════════════════════════════════════════════════════════════════════
-experiments:
+# ===============================================================================
+# Значения по умолчанию - применяются ко всем комбинациям
+# (переопределяются осями в grid_axes)
+# ===============================================================================
+grid_defaults:
+  embedding_model: "BAAI/bge-m3"
+  embed_strategy:  text_only
+  embed_chars:     300
+  merge_window:    1
+  max_chunk_chars: 0
+  top_k:           7
+  hyde:            true
+  llm_model:       "gemma3:4b"
+  prompt_template: standard
+  ragas:
+    # judge_model не указывается - автоматически равен llm_model эксперимента
+    metrics:     [relevancy]
 
-  # ── Текущий baseline ─────────────────────────────────────────────────────────
-  - name: "baseline"
-    description: "Текущий pipeline: heading embed, bge-m3, top7, gemma3:4b"
 
-    # Что эмбеддируем:
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: heading_only    # heading_only | text_only | heading_plus_text
+# ===============================================================================
+# Оси перебора - декартово произведение всех списков
+# Комбинаций = произведение длин всех списков.
+# Имена генерируются автоматически:
+#   g__to__k7__m1       (text_only, top_k=7, merge=1)
+#   g__ho__k5__m2__hyde (heading_only, top_k=5, merge=2, hyde=true)
+# ===============================================================================
+grid_axes:
 
-    # Пре-обработка чанков:
-    merge_window: 1       # 1 = не мержить; 2/3 = склеить N соседних чанков из одного файла
-    max_chunk_chars: 0    # 0 = не сплитить; напр. 2000 — разбить длинные чанки
+  # heading_only      - только заголовок чанка
+  # text_only         - только текст чанка
+  # heading_plus_text - заголовок + первые embed_chars символов текста
+  embed_strategy: [heading_only, text_only, heading_plus_text]
 
-    # Retrieval:
-    top_k: 7
-    hyde: false
+  top_k: [7, 10, 15, 20]
 
-    # Generation:
-    llm_model: "gemma3:4b"
-    prompt_template: standard
+  # 1 = без слияния; 2 = склеить по 2 соседних чанка; 3 = по 3
+  merge_window: [1, 2, 3]
 
-    # RAGAS:
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Включи [false, true] чтобы протестировать HyDE (+~90s на комбинацию)
+  hyde: [true]
 
-  # ── Эмбеддинг по полному тексту ──────────────────────────────────────────────
-  - name: "text_only"
-    description: "embed = весь текст чанка (без заголовка)"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: text_only
-    merge_window: 1
-    max_chunk_chars: 0
-    top_k: 7
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # -- Раскомментируй оси по мере необходимости --------------------------------
 
-  # ── Заголовок + начало текста ─────────────────────────────────────────────────
-  - name: "heading_plus_500"
-    description: "embed = заголовок + первые 500 символов текста"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: heading_plus_text
-    embed_chars: 500      # только для heading_plus_text
-    merge_window: 1
-    max_chunk_chars: 0
-    top_k: 7
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Другая embedding-модель:
+  embedding_model:
+    - "BAAI/bge-m3"
+    - "intfloat/e5-mistral-7b-instruct"
+    - "Qwen/Qwen3-Embedding-8B"
 
-  - name: "heading_plus_full"
-    description: "embed = заголовок + весь текст"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: heading_plus_text
-    embed_chars: 0        # 0 = весь текст
-    merge_window: 1
-    max_chunk_chars: 0
-    top_k: 7
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Символов текста при heading_plus_text:
+  embed_chars: [150, 300, 500]
 
-  # ── Слияние чанков ────────────────────────────────────────────────────────────
-  - name: "merge2_text"
-    description: "Склеиваем по 2 соседних чанка из одного файла, embed = text"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: text_only
-    merge_window: 2
-    max_chunk_chars: 0
-    top_k: 5              # меньше чанков, т.к. каждый вдвое больше
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Разбивать длинные чанки:
+  max_chunk_chars: [0, 500, 1500]
 
-  - name: "merge3_text"
-    description: "Склеиваем по 3 соседних чанка из одного файла, embed = text"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: text_only
-    merge_window: 3
-    max_chunk_chars: 0
-    top_k: 5
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Разные LLM для генерации:
+  llm_model:
+    - "unsloth/gpt-oss-20b-unsloth-bnb-4bit"
+    - "unsloth/gemma-4-31B-unsloth-bnb-4bit"
+    - "unsloth/medgemma-27b-text-it-unsloth-bnb-4bit"
 
-  # ── Больше чанков в контексте ─────────────────────────────────────────────────
-  - name: "text_top10"
-    description: "embed = текст, top_k=10"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: text_only
-    merge_window: 1
-    max_chunk_chars: 0
-    top_k: 10
-    hyde: false
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Разные шаблоны промпта:
+  prompt_template: [standard, step_by_step, self_critique, aspect_decomposition]
 
-  # ── HyDE ─────────────────────────────────────────────────────────────────────
-  - name: "text_hyde"
-    description: "embed = текст + HyDE (LLM генерирует гипотетический ответ)"
-    embedding_model: "BAAI/bge-m3"
-    embed_strategy: text_only
-    merge_window: 1
-    max_chunk_chars: 0
-    top_k: 7
-    hyde: true
-    llm_model: "gemma3:4b"
-    prompt_template: standard
-    ragas:
-      judge_model: "llama3:8b"
-      metrics: [relevancy]
+  # Разные наборы RAGAS-метрик:
+  ragas:
+    - { metrics: [relevancy, faithfulness, precision, recall] }
 
-  # ── Другая embedding модель ───────────────────────────────────────────────────
-  # Раскомментируй если хочешь протестировать другую модель.
-  # Первый запуск будет медленным — модель скачается из HuggingFace.
-  #
-  # - name: "e5_text"
-  #   description: "embed = text, multilingual-e5-large"
-  #   embedding_model: "intfloat/multilingual-e5-large"
-  #   embed_strategy: text_only
-  #   merge_window: 1
-  #   max_chunk_chars: 0
-  #   top_k: 7
-  #   hyde: false
-  #   llm_model: "gemma3:4b"
-  #   prompt_template: standard
-  #   ragas:
-  #     judge_model: "llama3:8b"
-  #     metrics: [relevancy]
-
-  # ── Другой LLM для генерации ──────────────────────────────────────────────────
-  # - name: "llama_generation"
-  #   description: "Лучшая стратегия + llama3:8b для генерации"
-  #   embedding_model: "BAAI/bge-m3"
-  #   embed_strategy: text_only
-  #   merge_window: 1
-  #   max_chunk_chars: 0
-  #   top_k: 7
-  #   hyde: false
-  #   llm_model: "llama3:8b"          # другая LLM для ответов
-  #   prompt_template: focused
-  #   ragas:
-  #     judge_model: "llama3:8b"
-  #     metrics: [relevancy]
-
-  # ── Другой судья RAGAS ────────────────────────────────────────────────────────
-  # - name: "baseline_llama32_judge"
-  #   description: "baseline + llama3.2 как RAGAS судья"
-  #   embedding_model: "BAAI/bge-m3"
-  #   embed_strategy: heading_only
-  #   merge_window: 1
-  #   max_chunk_chars: 0
-  #   top_k: 7
-  #   hyde: false
-  #   llm_model: "gemma3:4b"
-  #   prompt_template: standard
-  #   ragas:
-  #     judge_model: "llama3.2:latest"
-  #     metrics: [relevancy]
-
-  # ── Другой промпт ─────────────────────────────────────────────────────────────
-  # - name: "focused_prompt"
-  #   description: "Лучшая стратегия + structured prompt"
-  #   embedding_model: "BAAI/bge-m3"
-  #   embed_strategy: text_only
-  #   merge_window: 1
-  #   max_chunk_chars: 0
-  #   top_k: 7
-  #   hyde: false
-  #   llm_model: "gemma3:4b"
-  #   prompt_template: focused     # <-- другой шаблон
-  #   ragas:
-  #     judge_model: "llama3:8b"
-  #     metrics: [relevancy]
-
-  # ── Полный набор метрик (медленно!) ───────────────────────────────────────────
-  # - name: "best_all_metrics"
-  #   description: "Лучший вариант со всеми RAGAS-метриками"
-  #   embedding_model: "BAAI/bge-m3"
-  #   embed_strategy: text_only
-  #   merge_window: 1
-  #   max_chunk_chars: 0
-  #   top_k: 7
-  #   hyde: false
-  #   llm_model: "gemma3:4b"
-  #   prompt_template: standard
-  #   ragas:
-  #     judge_model: "llama3:8b"
-  #     timeout: 1800
-  #     metrics: [relevancy, faithfulness, precision, recall]
+  # OCR-ось — это ИСТОЧНИК ДАННЫХ, не гиперпараметр embedding/retrieval.
+  # Требует отдельной ингестии (1_ingest.py) для каждого варианта.
+  # Раскомментируй когда будешь сравнивать датасеты:
+  # chunks_dir:
+  #   - "data/chunks"
+  #   - "data/chunks_gocr_off"
+  #   - "data/chunks_no_gaiv"
