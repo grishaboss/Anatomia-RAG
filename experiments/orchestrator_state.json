@@ -1,0 +1,314 @@
+{
+  "experiments": {},
+  "indices": {
+    "02c56978a70d": {
+      "collection": "anatomy__bge-m3__head__c500_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.833018+00:00"
+    },
+    "02e5d244a5cf": {
+      "collection": "anatomy__bge-m3__head__c150_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.015026+00:00"
+    },
+    "114dde46b894": {
+      "collection": "anatomy__bge-m3__head__c300_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.033328+00:00"
+    },
+    "17b76ad06f4f": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.510270+00:00"
+    },
+    "1a7b8701827e": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.420496+00:00"
+    },
+    "1ea2fc5bc820": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.816075+00:00"
+    },
+    "220271ddafad": {
+      "collection": "anatomy__bge-m3__head__c500_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.688214+00:00"
+    },
+    "23a1f9050fa2": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.117007+00:00"
+    },
+    "242c8e891ac2": {
+      "collection": "anatomy__bge-m3__head__c150_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:28.736972+00:00"
+    },
+    "2e8b27aa84ac": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.259244+00:00"
+    },
+    "2ff449891668": {
+      "collection": "anatomy__bge-m3__head__c300_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.277312+00:00"
+    },
+    "3bb86b936f48": {
+      "collection": "anatomy__bge-m3__head__c300_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.144682+00:00"
+    },
+    "4177e8f7d96d": {
+      "collection": "anatomy__bge-m3__head__c500_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.588028+00:00"
+    },
+    "46bd9651f776": {
+      "collection": "anatomy__bge-m3__head__c150_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.618125+00:00"
+    },
+    "4bccbe63e246": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.701120+00:00"
+    },
+    "4c8d2fd974a1": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.009844+00:00"
+    },
+    "4ddf35cbbacf": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.147715+00:00"
+    },
+    "5386d6e1f406": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.977672+00:00"
+    },
+    "543b5e2624f0": {
+      "collection": "anatomy__bge-m3__head__c150_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:28.878295+00:00"
+    },
+    "5575b7546e54": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.952292+00:00"
+    },
+    "60134e181b89": {
+      "collection": "anatomy__bge-m3__head__c500_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.314847+00:00"
+    },
+    "6c5333863cbc": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.060510+00:00"
+    },
+    "6f8777f4faf4": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.283605+00:00"
+    },
+    "7b3a1f57e63d": {
+      "collection": "anatomy__bge-m3__head__c300_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.415206+00:00"
+    },
+    "829fa6bb5ff1": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.545717+00:00"
+    },
+    "8325799316cb": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.369479+00:00"
+    },
+    "973f28c9f435": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.727016+00:00"
+    },
+    "a48aed330e1f": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.682648+00:00"
+    },
+    "a640385f2f9a": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.926513+00:00"
+    },
+    "aa370cf3f07a": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c300_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:30.402234+00:00"
+    },
+    "b20ac4de5aa8": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c150_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.869892+00:00"
+    },
+    "b42dd8a466ff": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.648462+00:00"
+    },
+    "b6318bda491a": {
+      "collection": "anatomy__bge-m3__head__c150_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.755239+00:00"
+    },
+    "c26a052a5af4": {
+      "collection": "anatomy__bge-m3__head__c300_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.894907+00:00"
+    },
+    "c3aabe4f973a": {
+      "collection": "anatomy__bge-m3__head__c500_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:29.550713+00:00"
+    },
+    "cce68c8e3d6d": {
+      "collection": "anatomy__bge-m3__head__c150_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.483712+00:00"
+    },
+    "d5ca967e381c": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.088493+00:00"
+    },
+    "d6c65db1c974": {
+      "collection": "anatomy__e5-mistral-7b-instru__head__c500_m2_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:34.565707+00:00"
+    },
+    "db518243c4f8": {
+      "collection": "anatomy__bge-m3__head__c500_m2_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.449054+00:00"
+    },
+    "df2781932145": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.203536+00:00"
+    },
+    "e762e8b6cbbe": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c150_m1_s0",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.227616+00:00"
+    },
+    "e8d3cff2847b": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c300_m1_s500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:31.789147+00:00"
+    },
+    "ea72c978c543": {
+      "collection": "anatomy__Qwen3-Embedding-8B__head__c500_m1_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:32.346056+00:00"
+    },
+    "fcdaeb3317b2": {
+      "collection": "anatomy__bge-m3__head__c300_m2_s1500",
+      "dry_run": true,
+      "exit_code": 0,
+      "status": "done",
+      "ts": "2026-04-24T14:45:33.172564+00:00"
+    }
+  },
+  "version": 1
+}
