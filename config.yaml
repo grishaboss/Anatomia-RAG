@@ -25,6 +25,7 @@ ingestion:
     - books/Сапин/sapin-tom-1.pdf
     - books/Сапин/sapin-tom-2.pdf
     - books/Гайворонский/gajvoronskij_i_v_normalnaya_anatomiya-tom-1.pdf
+    - books/Гайворонский/gajvoronskij_i_v_normalnaya_anatomiya-tom-2.pdf
 
   extract_figures: true
   figures_scale:   1.5              # 1.0=72dpi 1.5=108dpi 2.0=144dpi; выше = больше VRAM
@@ -47,7 +48,7 @@ chunking:
                                      # fixed:   HybridChunker с макс токенами
   # ― strategy: heading ―――――――――――――――――――――――――――――
   min_section_chars: 100             # игнорировать слишком короткие секции
-  max_section_chars: 8000            # обрезать очень длинные секции
+  max_section_chars: 35000            # обрезать очень длинные секции
   # ― strategy: fixed ――――――――――――――――――――――――――――――
   tokenizer:         BAAI/bge-m3     # должен совпадать с embedding model
   max_tokens:        512
