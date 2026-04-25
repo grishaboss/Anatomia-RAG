@@ -63,7 +63,7 @@ RESOURCE_PROFILES: dict[str, dict[str, Any]] = {
         "gpu_num": 0,
         "cpus": 4,
         "mem_gb": 16,
-        "time_min": 120,
+        "time_min": 8,
         "partition": None,
     },
     # 1 GPU, малая VRAM (bge-m3 ~2.4 GB, MiniLM ~0.1 GB)
@@ -71,28 +71,28 @@ RESOURCE_PROFILES: dict[str, dict[str, Any]] = {
         "gpu_num": 1,
         "cpus": 4,
         "mem_gb": 24,
-        "time_min": 240,
+        "time_min": 8,
     },
     # 1 GPU, стандартный (любой embedding-model до ~8 GB)
     "gpu1": {
         "gpu_num": 1,
         "cpus": 8,
         "mem_gb": 40,
-        "time_min": 480,
+        "time_min": 8,
     },
     # 2 GPU (большие модели или параллельное embedding + Ollama)
     "gpu2": {
         "gpu_num": 2,
         "cpus": 16,
         "mem_gb": 80,
-        "time_min": 480,
+        "time_min": 8,
     },
     # Полный узел с 8 GPU
     "gpu8": {
         "gpu_num": 8,
         "cpus": 96,
         "mem_gb": 320,
-        "time_min": 480,
+        "time_min": 8,
         "exclusive": True,
     },
     # Кластер hiperf, узел tesla-a101
@@ -100,7 +100,7 @@ RESOURCE_PROFILES: dict[str, dict[str, Any]] = {
         "gpu_num": 1,
         "cpus": 16,
         "mem_gb": 80,
-        "time_min": 480,
+        "time_min": 8,
         "partition": "hiperf",
         "nodelist": "tesla-a101",
     },
