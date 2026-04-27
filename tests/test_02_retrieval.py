@@ -6,7 +6,7 @@ test_02_retrieval.py — тестирование и сравнение retrieva
     python tests/test_02_retrieval.py
 
     # Произвольный запрос
-    python tests/test_02_retrieval.py --query "шейный позвонок атлант"
+    python tests/test_02_retrieval.py --query "Рёбра и грудина, их соединения. Мышцы груди. Васкуляризация и иннервация стенок грудной полости."
 
     # С фильтром по автору
     python tests/test_02_retrieval.py --query "позвонок" --author Гайворонский

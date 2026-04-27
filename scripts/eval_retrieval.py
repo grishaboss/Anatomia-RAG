@@ -76,7 +76,8 @@ def main() -> None:
     embed_model = SentenceTransformer(cfg["embedding"]["model"], device=device)
     chroma_dir = ROOT / cfg["paths"]["chroma_dir"]
     client = chromadb.PersistentClient(path=str(chroma_dir))
-    collection = client.get_collection("anatomy")
+    coll_name = cfg.get("retrieval", {}).get("collection_name", "anatomy")
+    collection = client.get_collection(coll_name)
 
     print(f"\nЗапрос: «{args.query}»")
     print(f"HyDE: {'да' if args.hyde else 'нет'}  |  top_k: {args.top_k}  |  автор: {args.author or 'все'}")

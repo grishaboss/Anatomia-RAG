@@ -75,6 +75,9 @@ def retrieve(
     )
     if author_filter is not None:
         query_kwargs["where"] = {"author": author_filter}
+    else:
+        # Исключить чанки из questions/ (author пустой, т.к. не из books/)
+        query_kwargs["where"] = {"author": {"$ne": ""}}
 
     results = collection.query(**query_kwargs)
 

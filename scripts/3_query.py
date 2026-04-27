@@ -69,10 +69,11 @@ def main() -> None:
     embed_model = SentenceTransformer(config["embedding"]["model"], device=device)
 
     client = chromadb.PersistentClient(path=str(ROOT / config["paths"]["chroma_dir"]))
+    coll_name = config.get("retrieval", {}).get("collection_name", "anatomy")
     try:
-        collection = client.get_collection("anatomy")
+        collection = client.get_collection(coll_name)
     except Exception:
-        print("ОШИБКА: Индекс не найден. Запустите 2_build_index.py")
+        print(f"ОШИБКА: Индекс {coll_name!r} не найден. Запустите 2_build_index.py")
         sys.exit(1)
 
     print(f"Индекс: {collection.count()} чанков\n")

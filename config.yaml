@@ -66,9 +66,10 @@ embedding:
 #  Поиск
 # ───────────────────────────────────────────────
 retrieval:
-  top_k:            7               # heading-чанки крупнее — нужно меньше
+  top_k:            10              # heading-чанки крупнее — нужно меньше
   score_threshold:  0.20            # понижен для heading-to-query сравнения
-  hyde:             true           # HyDE: вместо запроса эмбеддится гипотетический ответ LLM
+  hyde:             true            # HyDE: вместо запроса эмбеддится гипотетический ответ LLM
+  collection_name:  anatomy__bge-m3__text_only  # text_only значительно лучше heading_only
 
 # ───────────────────────────────────────────────
 #  LLM

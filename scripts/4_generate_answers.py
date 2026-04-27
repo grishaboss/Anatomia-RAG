@@ -256,11 +256,12 @@ def main() -> None:
     embed_model = SentenceTransformer(config["embedding"]["model"], device=device)
 
     client = chromadb.PersistentClient(path=str(ROOT / config["paths"]["chroma_dir"]))
+    coll_name = config.get("retrieval", {}).get("collection_name", "anatomy")
     try:
-        collection = client.get_collection("anatomy")
-        logger.info(f"Индекс: {collection.count()} чанков")
+        collection = client.get_collection(coll_name)
+        logger.info(f"Индекс {coll_name!r}: {collection.count()} чанков")
     except Exception:
-        logger.error("Индекс не найден — запустите 2_build_index.py")
+        logger.error(f"Индекс {coll_name!r} не найден — запустите 2_build_index.py")
         sys.exit(1)
 
     # Чекпойнт для --resume

@@ -59,7 +59,9 @@ def get_collection():
                 "Run: python scripts/2_build_index.py first."
             )
         client = chromadb.PersistentClient(path=str(chroma_dir))
-        _collection = client.get_collection("anatomy")
+        # Используем collection_name из конфига (если задан), иначе дефолт «anatomy»
+        coll_name = cfg.get("retrieval", {}).get("collection_name", "anatomy")
+        _collection = client.get_collection(coll_name)
         count = _collection.count()
-        print(f"[conftest] ChromaDB collection 'anatomy': {count:,} vectors.")
+        print(f"[conftest] ChromaDB collection {coll_name!r}: {count:,} vectors.")
     return _collection
